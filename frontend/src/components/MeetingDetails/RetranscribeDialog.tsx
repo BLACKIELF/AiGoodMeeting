@@ -23,6 +23,7 @@ import { useConfig } from '@/contexts/ConfigContext';
 import { LANGUAGES } from '@/constants/languages';
 import { useTranscriptionModels, ModelOption } from '@/hooks/useTranscriptionModels';
 import Analytics from '@/lib/analytics';
+import { toUserMessage } from '@/lib/user-message';
 
 interface RetranscribeDialogProps {
   open: boolean;
@@ -49,6 +50,15 @@ interface RetranscriptionResult {
 interface RetranscriptionError {
   meeting_id: string;
   error: string;
+}
+
+function retranscriptionStageLabel(stage?: string) {
+  switch (stage) {
+    case 'decoding': return '正在读取录音…';
+    case 'transcribing': return '正在重新转写…';
+    case 'saving': return '正在保存转写…';
+    default: return '正在处理录音…';
+  }
 }
 
 export function RetranscribeDialog({
@@ -154,7 +164,7 @@ export function RetranscribeDialog({
 
             setIsProcessing(false);
             toast.success(
-              `Retranscription complete! ${event.payload.segments_count} segments created.`
+              `重新转写完成，共 ${event.payload.segments_count} 段。`
             );
             onCompleteRef.current?.();
             onOpenChangeRef.current(false);
@@ -176,7 +186,8 @@ export function RetranscribeDialog({
             await Analytics.trackError('enhance_transcript_failed', event.payload.error);
 
             setIsProcessing(false);
-            setError(event.payload.error);
+            console.error('Retranscription backend error:', event.payload.error);
+            setError(toUserMessage(event.payload.error, '重新转写失败，请检查录音和模型设置后重试。'));
           }
         }
       );
@@ -188,7 +199,10 @@ export function RetranscribeDialog({
       unlisteners.push(unlistenError);
     };
 
-    setupListeners();
+    setupListeners().catch(error => {
+      console.error('Failed to listen for retranscription:', error);
+      if (!cleanedUpRef.current) setError(toUserMessage(error, '无法读取转写进度，请关闭后重试。'));
+    });
 
     return () => {
       cleanedUpRef.current = true;
@@ -198,7 +212,7 @@ export function RetranscribeDialog({
 
   const handleStartRetranscription = async () => {
     if (!meetingFolderPath) {
-      setError('Meeting folder path not available');
+      setError('找不到这场会议的录音文件夹。');
       return;
     }
 
@@ -224,7 +238,8 @@ export function RetranscribeDialog({
     } catch (err: any) {
       setIsProcessing(false);
       const errorMsg = typeof err === 'string' ? err : (err?.message || String(err));
-      setError(errorMsg);
+      console.error('Failed to start retranscription:', err);
+      setError(toUserMessage(err, '重新转写失败，请检查录音和模型设置后重试。'));
 
       await Analytics.trackError('enhance_transcript_failed', errorMsg);
     }
@@ -236,9 +251,11 @@ export function RetranscribeDialog({
         await invoke('cancel_retranscription_command');
         setIsProcessing(false);
         setProgress(null);
-        toast.info('Retranscription cancelled');
+        toast.info('已取消重新转写');
       } catch (err) {
         console.error('Failed to cancel retranscription:', err);
+        setError(toUserMessage(err, '暂时无法取消，转写仍在进行。请稍后重试。'));
+        return;
       }
     }
     onOpenChange(false);
@@ -267,7 +284,7 @@ export function RetranscribeDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="sm:max-w-[450px]"
+        className="rounded-2xl border-border bg-card text-card-foreground sm:max-w-[450px]"
         onEscapeKeyDown={handleEscapeKeyDown}
         onInteractOutside={handleInteractOutside}
       >
@@ -275,27 +292,27 @@ export function RetranscribeDialog({
           <DialogTitle className="flex items-center gap-2">
             {isProcessing ? (
               <>
-                <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
-                Retranscribing...
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                正在重新转写…
               </>
             ) : error ? (
               <>
-                <AlertCircle className="h-5 w-5 text-red-600" />
-                Retranscription Failed
+                <AlertCircle className="h-5 w-5 text-destructive" />
+                重新转写失败
               </>
             ) : (
               <>
-                <RefreshCw className="h-5 w-5 text-blue-600" />
-                Retranscribe Meeting
+                <RefreshCw className="h-5 w-5 text-primary" />
+                重新转写录音
               </>
             )}
           </DialogTitle>
           <DialogDescription>
             {isProcessing
-              ? progress?.message || 'Processing audio...'
+              ? retranscriptionStageLabel(progress?.stage)
               : error
-                ? 'An error occurred during retranscription'
-                : 'Re-process the audio with different language settings'}
+                ? '转写未完成，请检查录音与模型设置后重试'
+                : '可调整语言和模型，重新识别这场会议的录音。'}
           </DialogDescription>
         </DialogHeader>
 
@@ -305,11 +322,11 @@ export function RetranscribeDialog({
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Globe className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Language</span>
+                  <span className="text-sm font-medium">录音语言</span>
                 </div>
                 <Select value={selectedLang} onValueChange={setSelectedLang}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select language" />
+                    <SelectValue placeholder="选择语言" />
                   </SelectTrigger>
                   <SelectContent className="max-h-60">
                     {LANGUAGES.map((lang) => (
@@ -320,17 +337,17 @@ export function RetranscribeDialog({
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  Select a specific language to improve accuracy, or use auto-detect
+                  选择录音使用的语言，也可使用自动识别。
                 </p>
               </div>
             ) : (
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Globe className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Language</span>
+                  <span className="text-sm font-medium">录音语言</span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Language selection isn't supported for Parakeet. It always uses automatic detection.
+                  Parakeet 使用自动语言识别，无需手动选择。
                 </p>
               </div>
             )
@@ -340,11 +357,11 @@ export function RetranscribeDialog({
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Cpu className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Model</span>
+                <span className="text-sm font-medium">转写模型</span>
               </div>
               <Select value={selectedModelKey} onValueChange={setSelectedModelKey} disabled={loadingModels}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder={loadingModels ? "Loading models..." : "Select model"} />
+                  <SelectValue placeholder={loadingModels ? "正在读取模型…" : "选择模型"} />
                 </SelectTrigger>
                 <SelectContent>
                   {availableModels.map((model) => (
@@ -355,7 +372,7 @@ export function RetranscribeDialog({
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                Choose a transcription model
+                使用已配置的转写模型处理录音。
               </p>
             </div>
           )}
@@ -363,26 +380,26 @@ export function RetranscribeDialog({
           {isProcessing && progress && (
             <div className="space-y-2">
               <div className="relative">
-                <div className="w-full bg-gray-200 rounded-full h-3">
+                <div className="w-full bg-muted rounded-full h-3">
                   <div
-                    className="bg-blue-600 h-3 rounded-full transition-all duration-300 ease-out"
+                    className="bg-primary h-3 rounded-full transition-all duration-300 ease-out"
                     style={{ width: `${Math.min(progress.progress_percentage, 100)}%` }}
                   />
                 </div>
-                <div className="flex justify-between text-xs text-gray-600 mt-1">
-                  <span>{progress.stage}</span>
+                <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                  <span>{retranscriptionStageLabel(progress.stage)}</span>
                   <span>{Math.round(progress.progress_percentage)}%</span>
                 </div>
               </div>
               <p className="text-sm text-muted-foreground text-center">
-                {progress.message}
+                {retranscriptionStageLabel(progress.stage)}
               </p>
             </div>
           )}
 
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-sm text-red-800">{error}</p>
+            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+              <p className="text-sm text-destructive">{error}</p>
             </div>
           )}
         </div>
@@ -391,28 +408,28 @@ export function RetranscribeDialog({
           {!isProcessing && !error && (
             <>
               <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
+                取消
               </Button>
               <Button
                 onClick={handleStartRetranscription}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-primary hover:bg-primary/90"
                 disabled={!meetingFolderPath}
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
-                Start Retranscription
+                开始重新转写
               </Button>
             </>
           )}
           {isProcessing && (
             <Button variant="outline" onClick={handleCancel}>
               <X className="h-4 w-4 mr-2" />
-              Cancel
+              取消
             </Button>
           )}
           {error && (
             <>
               <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Close
+                关闭
               </Button>
               <Button
                 onClick={() => {
@@ -421,7 +438,7 @@ export function RetranscribeDialog({
                 }}
                 variant="outline"
               >
-                Try Again
+                重试
               </Button>
             </>
           )}

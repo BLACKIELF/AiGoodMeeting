@@ -1,14 +1,17 @@
 import "@blocknote/core/fonts/inter.css";
 import { useCreateBlockNote } from "@blocknote/react";
+import { zh } from '@blocknote/core/locales';
 import { BlockNoteView } from "@blocknote/shadcn";
 import "@blocknote/shadcn/style.css";
 import { ChangeEvent, useCallback, useEffect } from "react";
 
-const initialMarkdown = "Hello, **world!**";
+const initialMarkdown = "你好，**世界！**";
 
 export default function BasicBlockNoteTest() {
   // Creates a new editor instance.
-  const editor = useCreateBlockNote({});
+  const editor = useCreateBlockNote({ dictionary: { ...zh, file_panel: { ...zh.file_panel, upload: {
+    ...zh.file_panel.upload, upload_error: '上传失败，请重试。',
+  } } } });
 
   const markdownInputChanged = useCallback(
     async (e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -33,7 +36,7 @@ export default function BasicBlockNoteTest() {
   return (
     <div className="views">
       <div className="view-wrapper">
-        <div className="view-label">Markdown Input</div>
+        <div className="view-label">标记文本输入</div>
         <div className="view">
           <code>
             <textarea
@@ -44,7 +47,7 @@ export default function BasicBlockNoteTest() {
         </div>
       </div>
       <div className="view-wrapper">
-        <div className="view-label">Editor Output</div>
+        <div className="view-label">编辑内容</div>
         <div className="view">
           <BlockNoteView editor={editor} editable={true} />
         </div>

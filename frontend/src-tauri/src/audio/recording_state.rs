@@ -69,16 +69,16 @@ impl AudioError {
     /// Get user-friendly error message
     pub fn user_message(&self) -> &'static str {
         match self {
-            AudioError::DeviceDisconnected => "Audio device was disconnected",
-            AudioError::StreamFailed => "Audio stream encountered an error",
-            AudioError::ProcessingFailed => "Audio processing failed",
-            AudioError::TranscriptionFailed => "Speech transcription failed",
-            AudioError::ChannelClosed => "Audio channel was closed unexpectedly",
-            AudioError::InitializationFailed => "Failed to initialize audio system",
-            AudioError::ConfigurationError => "Audio configuration error",
-            AudioError::PermissionDenied => "Microphone permission denied",
-            AudioError::BufferOverflow => "Audio buffer overflow",
-            AudioError::SampleRateUnsupported => "Audio sample rate not supported",
+            AudioError::DeviceDisconnected => "录音设备已断开，请重新连接。",
+            AudioError::StreamFailed => "音频输入出现问题，请检查录音设备。",
+            AudioError::ProcessingFailed => "音频处理失败，请重试。",
+            AudioError::TranscriptionFailed => "语音转写失败，请检查模型。",
+            AudioError::ChannelClosed => "音频通道意外关闭，请重新开始录音。",
+            AudioError::InitializationFailed => "音频系统未能启动，请检查设备和权限。",
+            AudioError::ConfigurationError => "录音设备设置有误，请重新选择。",
+            AudioError::PermissionDenied => "麦克风权限被拒绝，请在系统设置中允许访问。",
+            AudioError::BufferOverflow => "音频处理跟不上录音速度，请关闭其他占用资源的应用。",
+            AudioError::SampleRateUnsupported => "不支持此设备的采样率，请更换录音设备。",
         }
     }
 }

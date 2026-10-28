@@ -1,3 +1,4 @@
+import { toUserMessage } from '@/lib/user-message';
 import React, { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { Info } from 'lucide-react';
@@ -12,6 +13,12 @@ interface AudioBackendSelectorProps {
   currentBackend?: string;
   onBackendChange?: (backend: string) => void;
   disabled?: boolean;
+}
+
+function backendDescription(backend: BackendInfo): string {
+  if (backend.id === 'screencapturekit') return '使用 Apple ScreenCaptureKit 采集系统音频，兼容性较好。';
+  if (backend.id === 'coreaudio' || backend.id === 'core_audio') return '使用 Core Audio 直接采集，延迟较低。';
+  return toUserMessage(backend.description, '系统音频采集方式');
 }
 
 export function AudioBackendSelector({
@@ -45,7 +52,7 @@ export function AudioBackendSelector({
         }
       } catch (err) {
         console.error('Failed to load audio backends:', err);
-        setError('Failed to load backend options');
+        setError(toUserMessage(err, '无法读取音频采集选项，请重试。'));
       } finally {
         setLoading(false);
       }
@@ -69,7 +76,7 @@ export function AudioBackendSelector({
       console.log(`Audio backend changed to: ${backendId}`);
     } catch (err) {
       console.error('Failed to set audio backend:', err);
-      setError('Failed to change backend. Please try again.');
+      setError(toUserMessage(err, '无法切换音频采集方式，请重试。'));
     }
   };
 
@@ -92,7 +99,7 @@ export function AudioBackendSelector({
     <div className="space-y-2">
       <div className="flex items-center gap-2">
         <label className="text-sm font-medium text-gray-700">
-          System Audio Backend
+          系统音频采集方式
         </label>
         <div className="relative">
           <button
@@ -105,16 +112,16 @@ export function AudioBackendSelector({
           </button>
           {showTooltip && (
             <div className="absolute z-10 left-6 top-0 w-64 p-3 text-xs bg-gray-900 text-white rounded-lg shadow-lg">
-              <p className="font-semibold mb-1">Audio Capture Methods:</p>
+              <p className="font-semibold mb-1">可用的采集方式</p>
               <ul className="space-y-1">
                 {backends.map((backend) => (
                   <li key={backend.id}>
-                    <span className="font-medium">{backend.name}:</span> {backend.description}
+                    <span className="font-medium">{backend.name}：</span> {backendDescription(backend)}
                   </li>
                 ))}
               </ul>
               <p className="mt-2 text-gray-300">
-                Try different backends to find which works best for your system.
+                若采集异常，可尝试其他方式。
               </p>
             </div>
           )}
@@ -158,16 +165,16 @@ export function AudioBackendSelector({
                   </span>
                   {currentBackend === backend.id && (
                     <span className="text-xs font-medium text-blue-600 bg-blue-100 px-2 py-0.5 rounded">
-                      Active
+                      正在使用
                     </span>
                   )}
                   {isCoreAudio && (
                     <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
-                      Disabled
+                      暂不可用
                     </span>
                   )}
                 </div>
-                <p className="mt-1 text-xs text-gray-600">{backend.description}</p>
+                <p className="mt-1 text-xs text-gray-600">{backendDescription(backend)}</p>
               </div>
             </label>
           );
@@ -175,9 +182,9 @@ export function AudioBackendSelector({
       </div>
 
       <div className="text-xs text-gray-500 space-y-1">
-        <p>• Backend selection only affects system audio capture</p>
-        <p>• Microphone always uses the default method</p>
-        <p>• Changes apply to new recording sessions</p>
+        <p>• 此选项仅影响系统音频</p>
+        <p>• 麦克风仍使用默认采集方式</p>
+        <p>• 更改从下一次录音生效</p>
       </div>
     </div>
   );

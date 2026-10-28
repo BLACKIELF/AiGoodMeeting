@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { FileQuestion, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toUserMessage } from '@/lib/user-message';
 import {
   Tooltip,
   TooltipContent,
@@ -28,19 +29,21 @@ export function EmptyStateSummary({
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
-      className="flex flex-col items-center justify-center h-full p-8 text-center"
+      className="flex min-h-0 flex-1 flex-col items-center justify-center p-8 text-center"
     >
-      <FileQuestion className="w-16 h-16 text-gray-300 mb-4" />
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">
-        No Summary Generated Yet
+      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-muted/60">
+        <FileQuestion className="h-6 w-6 text-muted-foreground" />
+      </div>
+      <h3 className="mb-2 text-base font-semibold text-foreground">
+        这场会议还没有纪要
       </h3>
-      <p className="text-sm text-gray-500 mb-6 max-w-md">
-        Generate an AI-powered summary of your meeting transcript to get key points, action items, and decisions.
+      <p className="mb-5 max-w-xs text-sm leading-relaxed text-muted-foreground">
+        从会议转写中整理讨论重点、决策与待办。
       </p>
 
       {error && (
-        <p role="alert" className="mb-4 max-w-md rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-          {error}
+        <p role="alert" className="mb-4 max-w-md rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {toUserMessage(error, '纪要生成失败，请检查模型设置后重试。')}
         </p>
       )}
 
@@ -54,21 +57,21 @@ export function EmptyStateSummary({
                 className="gap-2"
               >
                 <Sparkles className="w-4 h-4" />
-                {isGenerating ? 'Generating...' : error ? 'Retry summary' : 'Generate Summary'}
+                {isGenerating ? '正在生成…' : error ? '重新生成纪要' : '生成会议纪要'}
               </Button>
             </div>
           </TooltipTrigger>
           {!hasModel && (
             <TooltipContent>
-              <p>Please select a model in Settings first</p>
+              <p>请先在模型设置中选择纪要模型</p>
             </TooltipContent>
           )}
         </Tooltip>
       </TooltipProvider>
 
       {!hasModel && (
-        <p className="text-xs text-amber-600 mt-3">
-          Please select a model in Settings first
+        <p className="mt-3 text-xs text-muted-foreground">
+          请先在模型设置中选择纪要模型
         </p>
       )}
     </motion.div>

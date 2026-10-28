@@ -1,0 +1,386 @@
+{
+  "version": "1028v1",
+  "verified_date": "2026-10-28",
+  "platform": "macOS arm64, M4 Pro, 48 GiB",
+  "entrypoint": "${SOURCE}/local-diarization/transcribe.py",
+  "python": "${RUNTIME}/diarization-venv/bin/python",
+  "python_version": "3.12.13",
+  "venv_logical_file_bytes": 449215509,
+  "mlx_audio": {
+    "version": "0.6.2",
+    "repository": "https://github.com/Blaizzy/mlx-audio",
+    "commit": "6ce7283be6f15f0cba37e839e73bfa4a08bbf040",
+    "license": "MIT"
+  },
+  "default_model": {
+    "directory": "${TASK_DATA}/模型/diarization/Sortformer-v2.1-4spk-fp32",
+    "repository": "https://huggingface.co/mlx-community/diar_streaming_sortformer_4spk-v2.1-fp32",
+    "revision": "8541fc3db304f350b544bbcab1cfae4f3eeb2356",
+    "weight_bytes": 472107058,
+    "weight_sha256": "dd18528b0e74a130501cde9beb655f9fc011e8718682728e2e88a981184cf282",
+    "directory_logical_file_bytes": 472458678,
+    "speaker_capacity": 4,
+    "native_frame_seconds": 0.08,
+    "license": "NVIDIA Open Model License"
+  },
+  "reused": {
+    "whisper_cli": "/opt/homebrew/bin/whisper-cli",
+    "whisper_version": "1.9.5",
+    "whisper_model": "${TASK_DATA}/模型/whisper/ggml-large-v3-turbo.bin",
+    "ffmpeg": "/opt/homebrew/bin/ffmpeg",
+    "ffmpeg_version": "9.0.2"
+  },
+  "packages": [
+    {
+      "name": "annotated-doc",
+      "version": "0.0.5"
+    },
+    {
+      "name": "anyio",
+      "version": "4.15.1"
+    },
+    {
+      "name": "cffi",
+      "version": "2.1.1"
+    },
+    {
+      "name": "click",
+      "version": "8.5.0"
+    },
+    {
+      "name": "filelock",
+      "version": "4.2.4"
+    },
+    {
+      "name": "fsspec",
+      "version": "2026.9.0"
+    },
+    {
+      "name": "h11",
+      "version": "0.16.0"
+    },
+    {
+      "name": "hf-xet",
+      "version": "1.7.0"
+    },
+    {
+      "name": "httpcore2",
+      "version": "2.16.0"
+    },
+    {
+      "name": "httpx2",
+      "version": "2.16.0"
+    },
+    {
+      "name": "huggingface_hub",
+      "version": "2.3.0"
+    },
+    {
+      "name": "idna",
+      "version": "3.20"
+    },
+    {
+      "name": "Jinja2",
+      "version": "3.1.6"
+    },
+    {
+      "name": "markdown-it-py",
+      "version": "4.2.0"
+    },
+    {
+      "name": "MarkupSafe",
+      "version": "3.0.4"
+    },
+    {
+      "name": "mdurl",
+      "version": "0.1.2"
+    },
+    {
+      "name": "miniaudio",
+      "version": "1.71"
+    },
+    {
+      "name": "mlx",
+      "version": "0.32.4"
+    },
+    {
+      "name": "mlx-audio",
+      "version": "0.6.2"
+    },
+    {
+      "name": "mlx-metal",
+      "version": "0.32.4"
+    },
+    {
+      "name": "numpy",
+      "version": "2.5.4"
+    },
+    {
+      "name": "packaging",
+      "version": "26.3"
+    },
+    {
+      "name": "pycparser",
+      "version": "3.12"
+    },
+    {
+      "name": "Pygments",
+      "version": "2.21.0"
+    },
+    {
+      "name": "PyYAML",
+      "version": "6.0.3"
+    },
+    {
+      "name": "regex",
+      "version": "2026.9.29"
+    },
+    {
+      "name": "rich",
+      "version": "15.0.0"
+    },
+    {
+      "name": "safetensors",
+      "version": "0.8.0"
+    },
+    {
+      "name": "scipy",
+      "version": "1.18.1"
+    },
+    {
+      "name": "sentencepiece",
+      "version": "0.2.2"
+    },
+    {
+      "name": "shellingham",
+      "version": "1.5.4"
+    },
+    {
+      "name": "sounddevice",
+      "version": "0.5.6"
+    },
+    {
+      "name": "tokenizers",
+      "version": "0.23.3"
+    },
+    {
+      "name": "tqdm",
+      "version": "4.70.1"
+    },
+    {
+      "name": "transformers",
+      "version": "5.21.0"
+    },
+    {
+      "name": "truststore",
+      "version": "0.10.5"
+    },
+    {
+      "name": "typer",
+      "version": "0.27.3"
+    },
+    {
+      "name": "typing_extensions",
+      "version": "4.16.0"
+    }
+  ],
+  "source_hashes": {
+    ".gitignore": "32dae3052f331ee34d628ef535709b301259a45df7c7522c4d35dcf49873f00b",
+    "README.md": "158f0a6fc31836faeeb500b077b572e0d41aa32f298a5b07209789a6d4b77e26",
+    "requirements.lock": "58671807e7e319872f24484af45692ecebfc94af54a43925d9f351a93c53e479",
+    "tests/check_sortformer_parity.py": "e29fdd9e142ea368e8fd55fcc68ed1565e4c41fa55cc02a9ec172e208b279e64",
+    "tests/make_fixture.py": "66fbcf8640b5a809e29470ca68a3836d0a8c65ddfb89b1272597f79fec74e738",
+    "tests/test_alignment.py": "3344745766b5ea61b740491bfb1881279170d24d6c8919efaf26c8a10e3f556d",
+    "tests/verify_fixture.py": "ae11f3cf4ff043056ff4710a9faa76506c985e0af4e880ef561d11abe71c29a6",
+    "transcribe.py": "3694aee9d29929a834b0f61420214df560a972cbc1e31c72bb54e25434e5c2a7"
+  },
+  "checks": {
+    "unit_tests": 14,
+    "unit_tests_passed": true,
+    "unit_test_log": "${TASK_DATA}/验收-分人-1028v1/unit-tests.log",
+    "bounded_official_parity": {
+      "shape": [
+        628,
+        4
+      ],
+      "chunk_seconds": 15.04,
+      "max_absolute_error": 0.0,
+      "mean_absolute_error": 0.0,
+      "passed": true
+    },
+    "offline_post_cleanup": {
+      "passed": true,
+      "scope": "synthetic anonymous grouping; not a natural meeting benchmark",
+      "speaker_mapping": {
+        "甲": "speaker_0",
+        "乙": "speaker_1",
+        "丙": "speaker_2"
+      },
+      "turns": [
+        {
+          "turn": 1,
+          "voice": "Tingting",
+          "expected_speaker": "甲",
+          "dominant_speaker": "speaker_0",
+          "known_coverage": 0.959
+        },
+        {
+          "turn": 2,
+          "voice": "Grandpa (中文（中国大陆）)",
+          "expected_speaker": "乙",
+          "dominant_speaker": "speaker_1",
+          "known_coverage": 0.8106
+        },
+        {
+          "turn": 3,
+          "voice": "Meijia",
+          "expected_speaker": "丙",
+          "dominant_speaker": "speaker_2",
+          "known_coverage": 0.9622
+        },
+        {
+          "turn": 4,
+          "voice": "Tingting",
+          "expected_speaker": "甲",
+          "dominant_speaker": "speaker_0",
+          "known_coverage": 0.9425
+        },
+        {
+          "turn": 5,
+          "voice": "Grandpa (中文（中国大陆）)",
+          "expected_speaker": "乙",
+          "dominant_speaker": "speaker_1",
+          "known_coverage": 0.8545
+        },
+        {
+          "turn": 6,
+          "voice": "Meijia",
+          "expected_speaker": "丙",
+          "dominant_speaker": "speaker_2",
+          "known_coverage": 0.9562
+        }
+      ],
+      "failures": [],
+      "offline_enforcement": "macOS sandbox-exec (version 1)(allow default)(deny network*)",
+      "post_cleanup": true,
+      "stdout_json_bytes": 1825,
+      "warnings": [
+        "8 个短片段的说话人或时间无法确定，已保留文字并标为“未确定说话人”。",
+        "有 23 处词语缺少独立时间点，已使用相邻短片段的时间或标为“未确定说话人”；这些时间为近似值。"
+      ],
+      "model": "mlx-community/diar_streaming_sortformer_4spk-v2.1-fp32"
+    },
+    "same_fixture_comparison": [
+      {
+        "model": "nemotron",
+        "fixture": "two-voices-zh",
+        "passed": true,
+        "mapping": {
+          "甲": "speaker_0",
+          "乙": "speaker_1"
+        },
+        "seconds": 7.02,
+        "failures": []
+      },
+      {
+        "model": "nemotron",
+        "fixture": "three-voices-zh",
+        "passed": false,
+        "mapping": {
+          "甲": "speaker_0",
+          "乙": "speaker_1",
+          "丙": "speaker_0"
+        },
+        "seconds": 5.84,
+        "failures": [
+          "different known voices were merged"
+        ]
+      },
+      {
+        "model": "nemotron",
+        "fixture": "two-voices-zh-long",
+        "passed": true,
+        "mapping": {
+          "甲": "speaker_0",
+          "乙": "speaker_1"
+        },
+        "seconds": 11.273,
+        "failures": []
+      },
+      {
+        "model": "sortformer",
+        "fixture": "two-voices-zh",
+        "passed": true,
+        "mapping": {
+          "甲": "speaker_0",
+          "乙": "speaker_1"
+        },
+        "seconds": 5.019,
+        "failures": []
+      },
+      {
+        "model": "sortformer",
+        "fixture": "three-voices-zh",
+        "passed": true,
+        "mapping": {
+          "甲": "speaker_0",
+          "乙": "speaker_1",
+          "丙": "speaker_2"
+        },
+        "seconds": 4.998,
+        "failures": []
+      },
+      {
+        "model": "sortformer",
+        "fixture": "two-voices-zh-long",
+        "passed": true,
+        "mapping": {
+          "甲": "speaker_0",
+          "乙": "speaker_1"
+        },
+        "seconds": 11.638,
+        "failures": []
+      }
+    ],
+    "long_sortformer_maximum_resident_set_size_bytes": 2041053184,
+    "long_sortformer_seconds": 11.638,
+    "long_fixture_seconds": 131.00175
+  },
+  "cleanup": {
+    "version": "1028v1",
+    "authorized_by": "root confirmed Sortformer runtime config read-back; remove unused Nemotron and dedicated uv-cache",
+    "venv_cache_reference_check": [],
+    "deleted": [
+      {
+        "path": "${TASK_DATA}/模型/diarization/Nemotron-3-Diarization",
+        "resolved_path": "${TASK_DATA}/模型/diarization/Nemotron-3-Diarization",
+        "logical_file_bytes_before": 198728701,
+        "free_bytes_before": 73971007488,
+        "model_sha256": "21e8427d1795c9c46c5800f56b16061734ffd0dcadd71d9bcf0b4d6ef7261da5",
+        "preserved_notices": "${TASK_DATA}/验收-分人-1028v1/nemotron-model-notices",
+        "absent_after": true,
+        "free_bytes_after": 74171547648,
+        "observed_free_bytes_change": 200540160
+      },
+      {
+        "path": "${RUNTIME}/uv-cache",
+        "resolved_path": "${RUNTIME}/uv-cache",
+        "logical_file_bytes_before": 703070411,
+        "free_bytes_before": 372089307136,
+        "absent_after": true,
+        "free_bytes_after": 372257013760,
+        "observed_free_bytes_change": 167706624
+      }
+    ],
+    "note": "Logical sizes count file entries; APFS hard links and concurrent writes can make observed free-space change differ."
+  },
+  "evidence_directory": "${TASK_DATA}/验收-分人-1028v1",
+  "limits": [
+    "Synthetic two- and three-voice samples; not a natural meeting diarization benchmark.",
+    "Four-speaker capacity is an architecture limit, not proven four-speaker accuracy.",
+    "Overlapping speech is flagged; separate complete text for both speakers is not guaranteed.",
+    "Whisper token offsets and adjacent short context are approximate; uncertain text is preserved as unknown.",
+    "Whisper uses 120-second cores with 2-second context; boundary text needs review."
+  ],
+  "authorization_scope": "Isolated runtime, module/tests and project model directory only; no application install, Rust/UI edits or publication by this worker."
+}

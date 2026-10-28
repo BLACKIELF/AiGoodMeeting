@@ -1,3 +1,4 @@
+import { toUserMessage } from '@/lib/user-message';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, UnlistenFn } from '@tauri-apps/api/event';
@@ -114,8 +115,8 @@ export function useImportAudio({
             await applyPinnedSummaryLanguageToMeeting(event.payload.meeting_id);
           } catch (error) {
             console.warn('Failed to apply pinned summary language to imported meeting:', error);
-            toast.warning('Could not apply default summary language', {
-              description: 'The imported meeting was saved, but the default summary language was not applied.',
+            toast.warning('未能应用默认纪要语言', {
+              description: '音频已导入并保存，但默认纪要语言未生效，可在会议页面重新选择。',
             });
           }
           onCompleteRef.current?.(event.payload);
@@ -137,8 +138,9 @@ export function useImportAudio({
           await Analytics.trackError('import_audio_failed', event.payload.error);
 
           setStatus('error');
-          setError(event.payload.error);
-          onErrorRef.current?.(event.payload.error);
+          const message = toUserMessage(event.payload.error, '音频导入失败，请重试。');
+          setError(message);
+          onErrorRef.current?.(message);
         }
       );
       if (cleanedUpRef.current) {
@@ -175,7 +177,7 @@ export function useImportAudio({
       }
     } catch (err: any) {
       setStatus('error');
-      const errorMsg = typeof err === 'string' ? err : (err?.message || String(err) || 'Failed to validate file');
+      const errorMsg = toUserMessage(err, '无法读取音频文件，请检查文件后重试。');
       setError(errorMsg);
       onErrorRef.current?.(errorMsg);
       return null;
@@ -194,7 +196,7 @@ export function useImportAudio({
       return result;
     } catch (err: any) {
       setStatus('error');
-      const errorMsg = typeof err === 'string' ? err : (err?.message || String(err) || 'Failed to validate file');
+      const errorMsg = toUserMessage(err, '无法读取音频文件，请检查文件后重试。');
       setError(errorMsg);
       onErrorRef.current?.(errorMsg);
       return null;
@@ -235,7 +237,7 @@ export function useImportAudio({
         });
       } catch (err: any) {
         setStatus('error');
-        const errorMsg = typeof err === 'string' ? err : (err?.message || String(err) || 'Failed to start import');
+        const errorMsg = toUserMessage(err, '无法开始导入音频，请重试。');
         setError(errorMsg);
 
         await Analytics.trackError('import_audio_failed', errorMsg);

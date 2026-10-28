@@ -17,7 +17,7 @@ use chrono::{DateTime, Duration, SecondsFormat, Utc};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::{LazyLock, Mutex};
-use tauri::{AppHandle, Runtime};
+use tauri::{AppHandle, Manager, Runtime};
 
 
 static SUMMARY_START_LOCK: LazyLock<tokio::sync::Mutex<()>> =
@@ -96,7 +96,7 @@ pub async fn api_save_meeting_summary<R: Runtime>(
     _app: AppHandle<R>,
     state: tauri::State<'_, AppState>,
     meeting_id: String,
-    summary: serde_json::Value,
+    mut summary: serde_json::Value,
     _auth_token: Option<String>,
 ) -> Result<serde_json::Value, String> {
     log_info!(
@@ -107,7 +107,20 @@ pub async fn api_save_meeting_summary<R: Runtime>(
         return Err("Summary contains no visible content or model reasoning markers and was not saved.".into());
     }
     let pool = state.db_manager.pool();
-
+    // Editing rendered content does not change which speaker revision generated it.
+    // Preserve the saved marker instead of accepting a newer marker from the client.
+    if let Some(object) = summary.as_object_mut() {
+        object.remove("speaker_transcript_updated_at");
+        if let Some(previous) = SummaryProcessesRepository::get_summary_data(pool, &meeting_id)
+            .await
+            .map_err(|_| "无法读取现有摘要，修改尚未保存。".to_string())?
+            .and_then(|process| process.result)
+            .and_then(|raw| serde_json::from_str::<serde_json::Value>(&raw).ok())
+            .and_then(|value| value.get("speaker_transcript_updated_at").cloned())
+        {
+            object.insert("speaker_transcript_updated_at".to_string(), previous);
+        }
+    }
 
     match SummaryProcessesRepository::update_meeting_summary(pool, &meeting_id, &summary).await {
         Ok(true) => {
@@ -486,6 +499,20 @@ pub async fn api_process_transcript<R: Runtime>(
     let final_prompt = custom_prompt.unwrap_or_else(|| "".to_string());
     let final_template_id = template_id.unwrap_or_else(|| "daily_standup".to_string());
 
+    // Speaker attribution is an independent sidecar. Keep the original transcript
+    // data below intact, and use this immutable revision only as summary input.
+    let speaker_transcript = crate::diarization::load_speaker_transcript(
+        &app.path().app_data_dir().map_err(|_| "无法访问本地说话人结果目录。".to_string())?,
+        &m_id,
+    )?;
+    let (summary_text, speaker_transcript_updated_at) = match speaker_transcript {
+        Some(transcript) => (
+            crate::diarization::summary_text(&transcript),
+            Some(transcript.updated_at),
+        ),
+        None => (text.clone(), None),
+    };
+
     // Normalise empty / whitespace-only to None so "" and null behave identically
     let summary_language = summary_language.and_then(|s| {
         let t = s.trim();
@@ -533,7 +560,8 @@ pub async fn api_process_transcript<R: Runtime>(
             meeting_id_clone,
             started_at,
             cancellation_token,
-            text,
+            summary_text,
+            speaker_transcript_updated_at,
             model,
             model_name,
             final_prompt,

@@ -12,24 +12,26 @@ const Info = React.forwardRef<HTMLButtonElement, InfoProps>(({ isCollapsed }, re
   return (
     <Dialog aria-describedby={undefined}>
       <DialogTrigger asChild>
-        <button 
-          ref={ref} 
-          className={`flex items-center justify-center mb-2 cursor-pointer border-none transition-colors ${
-            isCollapsed 
-              ? "bg-transparent p-2 hover:bg-gray-100 rounded-lg" 
-              : "w-full px-3 py-1.5 mt-1 text-sm font-medium text-gray-700 bg-gray-200 hover:bg-gray-200 rounded-lg shadow-sm"
+        <button
+          ref={ref}
+          type="button"
+          className={`flex items-center gap-2 rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+            isCollapsed
+              ? "h-9 w-9 justify-center"
+              : "w-full px-2.5 py-2 text-xs"
           }`}
-          title="About Meetily"
+          title="关于 AiGoodMeeting"
+          aria-label="关于 AiGoodMeeting"
         >
-          <InfoIcon className={`text-gray-600 ${isCollapsed ? "w-5 h-5" : "w-4 h-4"}`} />
+          <InfoIcon className="h-4 w-4 shrink-0" />
           {!isCollapsed && (
-            <span className="ml-2 text-sm text-gray-700">About</span>
+            <span>关于与开源许可</span>
           )}
         </button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[85vh] overflow-y-auto rounded-2xl border-border bg-card text-card-foreground">
         <VisuallyHidden>
-          <DialogTitle>About Meetily</DialogTitle>
+          <DialogTitle>关于 AiGoodMeeting</DialogTitle>
         </VisuallyHidden>
         <About />
       </DialogContent>
@@ -39,4 +41,4 @@ const Info = React.forwardRef<HTMLButtonElement, InfoProps>(({ isCollapsed }, re
 
 Info.displayName = "About";
 
-export default Info; 
+export default Info;

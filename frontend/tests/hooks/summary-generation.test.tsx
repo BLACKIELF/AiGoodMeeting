@@ -96,12 +96,27 @@ async function tick() {
 }
 
 describe('summary state restored when returning to a meeting', () => {
+  test('tracks the speaker revision actually used by saved, completed and restored summaries', async () => {
+    await show(response({ data: { markdown: 'Previous summary', speaker_transcript_updated_at: 'revision-1' } }));
+    expect(state.summarySpeakerRevision).toBe('revision-1');
+    getSummary = async () => response({ status: 'completed', data: { markdown: 'New summary', speaker_transcript_updated_at: 'revision-2' } });
+    await tick();
+    expect(state.summarySpeakerRevision).toBe('revision-2');
+    await show(null);
+    await show(response({ data: { markdown: 'Previous summary', speaker_transcript_updated_at: 'revision-2' } }));
+    getSummary = async () => response({ status: 'failed', error: 'Generation failed', data: { markdown: 'Restored summary', speaker_transcript_updated_at: 'revision-1' } });
+    await tick();
+    expect(state.summarySpeakerRevision).toBe('revision-1');
+    expect(text()).toContain('Restored summary');
+  });
+
   test('repeated recovery read failures end regeneration and retain visible notes', async () => {
     await show(response({ data: { markdown: 'Previous summary' } }));
     getSummary = async () => { throw new Error('Database unavailable'); };
     await tick();
     expect(state.summaryStatus).toBe('error');
-    expect(state.summaryError).toContain('Database unavailable');
+    expect(state.summaryError).toMatch(/[\u3400-\u9fff]/);
+    expect(state.summaryError).not.toContain('Database unavailable');
     expect(text()).toContain('Previous summary');
     expect(timers.size).toBe(0);
   });
@@ -167,14 +182,16 @@ describe('summary state restored when returning to a meeting', () => {
   test('shows a failure that happened while the meeting was closed', async () => {
     await show(response({ status: 'failed', error: 'Model unavailable' }));
     expect(text()).toContain('error');
-    expect(text()).toContain('Model unavailable');
+    expect(state.summaryError).toMatch(/[\u3400-\u9fff]/);
+    expect(text()).not.toContain('Model unavailable');
     expect(timers.size).toBe(0);
   });
 
   test('keeps restored notes and exposes a regeneration failure that happened while away', async () => {
     await show(response({ status: 'failed', error: 'Model unavailable', data: { markdown: 'Previous summary' } }));
     expect(state.summaryStatus).toBe('error');
-    expect(text()).toContain('Model unavailable');
+    expect(state.summaryError).toMatch(/[\u3400-\u9fff]/);
+    expect(text()).not.toContain('Model unavailable');
     expect(text()).toContain('Previous summary');
     expect(notify).not.toHaveBeenCalled();
   });

@@ -10,22 +10,22 @@ export function WelcomeStep() {
   const features = [
     {
       icon: Lock,
-      title: 'Your data never leaves your device',
+      title: '录音和转写保存在本机',
     },
     {
       icon: Sparkles,
-      title: 'Intelligent summaries & insights',
+      title: '自动整理会议纪要',
     },
     {
       icon: Cpu,
-      title: 'Works offline, no cloud required',
+      title: '使用本地模型，可离线处理',
     },
   ];
 
   return (
     <OnboardingContainer
-      title="Welcome to Meetily"
-      description="Record. Transcribe. Summarize. All on your device."
+      title="欢迎使用 AiGoodBro"
+      description="在本机完成录音、转写和会议纪要。"
       step={1}
       hideProgress={true}
     >
@@ -56,9 +56,9 @@ export function WelcomeStep() {
             onClick={goNext}
             className="w-full h-11 bg-gray-900 hover:bg-gray-800 text-white"
           >
-            Get Started
+            开始设置
           </Button>
-          <p className="text-xs text-center text-gray-500">Takes less than 3 minutes</p>
+          <p className="text-xs text-center text-gray-500">首次使用需下载模型，耗时取决于网络。</p>
         </div>
       </div>
     </OnboardingContainer>

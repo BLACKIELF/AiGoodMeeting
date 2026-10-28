@@ -3,6 +3,7 @@ import { ModelConfig } from '@/components/ModelSettingsModal';
 import { invoke as invokeTauri } from '@tauri-apps/api/core';
 import { toast } from 'sonner';
 import Analytics from '@/lib/analytics';
+import { toUserMessage } from '@/lib/user-message';
 
 interface UseModelConfigurationProps {
   serverAddress: string | null;
@@ -146,17 +147,14 @@ export function useModelConfiguration({ serverAddress }: UseModelConfigurationPr
       const { emit } = await import('@tauri-apps/api/event');
       await emit('model-config-updated', payload);
 
-      toast.success("Summary settings Saved successfully");
+      toast.success('纪要设置已保存');
 
       await Analytics.trackSettingsChanged('model_config', `${payload.provider}_${payload.model}`);
     } catch (error) {
       console.error('Failed to save model config:', error);
-      toast.error("Failed to save summary settings", { description: String(error) });
-      if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError('Failed to save model config: Unknown error');
-      }
+      const message = toUserMessage(error, '纪要设置保存失败，请重试。');
+      toast.error('纪要设置保存失败', { description: message });
+      setError(message);
     }
   }, [modelConfig]);
 

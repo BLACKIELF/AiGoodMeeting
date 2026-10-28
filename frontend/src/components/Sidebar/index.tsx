@@ -1,13 +1,13 @@
 'use client';
 
+import { toUserMessage } from '@/lib/user-message';
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { ChevronDown, ChevronRight, File, Settings, ChevronLeftCircle, ChevronRightCircle, Calendar, StickyNote, Home, Trash2, Mic, Square, Plus, Search, Pencil, NotebookPen, SearchIcon, X, Upload } from 'lucide-react';
+import { ChevronDown, ChevronRight, File, Settings, ChevronLeftCircle, Home, Trash2, Mic, Plus, Pencil, NotebookPen, SearchIcon, X, Upload } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useSidebar } from './SidebarProvider';
 import type { CurrentMeeting } from '@/components/Sidebar/SidebarProvider';
 import { ConfirmationModal } from '../ConfirmationModel/confirmation-modal';
 import { ModelConfig } from '@/components/ModelSettingsModal';
-import { SettingTabs } from '../SettingTabs';
 import { TranscriptModelProps } from '@/components/TranscriptSettings';
 import Analytics from '@/lib/analytics';
 import { invoke } from '@tauri-apps/api/core';
@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { useRecordingState } from '@/contexts/RecordingStateContext';
 import { useImportDialog } from '@/contexts/ImportDialogContext';
 import { useConfig } from '@/contexts/ConfigContext';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 
 import {
   Dialog,
@@ -23,13 +24,9 @@ import {
   DialogFooter,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { VisuallyHidden } from "@/components/ui/visually-hidden"
 
-import { MessageToast } from '../MessageToast';
 import Logo from '../Logo';
 import Info from '../Info';
-import { ComplianceNotification } from '../ComplianceNotification';
-import { Input } from '../ui/input';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '../ui/input-group';
 
 interface SidebarItem {
@@ -337,8 +334,8 @@ const Sidebar: React.FC = () => {
       Analytics.trackMeetingDeleted(itemId);
 
       // Show success toast
-      toast.success("Meeting deleted successfully", {
-        description: "All associated data has been removed"
+      toast.success("会议已删除", {
+        description: "相关数据已移除"
       });
 
       // If deleting the active meeting, navigate to home
@@ -348,8 +345,8 @@ const Sidebar: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to delete meeting:', error);
-      toast.error("Failed to delete meeting", {
-        description: error instanceof Error ? error.message : String(error)
+      toast.error("删除会议失败", {
+        description: toUserMessage(error, '操作未完成，请重试。')
       });
     }
   };
@@ -379,7 +376,7 @@ const Sidebar: React.FC = () => {
 
     // Prevent empty titles
     if (!newTitle) {
-      toast.error("Meeting title cannot be empty");
+      toast.error("会议名称不能为空");
       return;
     }
 
@@ -403,15 +400,15 @@ const Sidebar: React.FC = () => {
       // Track the edit
       Analytics.trackButtonClick('edit_meeting_title', 'sidebar');
 
-      toast.success("Meeting title updated successfully");
+      toast.success("会议名称已更新");
 
       // Close modal and reset state
       setEditModalState({ isOpen: false, meetingId: null, currentTitle: '' });
       setEditingTitle('');
     } catch (error) {
       console.error('Failed to update meeting title:', error);
-      toast.error("Failed to update meeting title", {
-        description: error instanceof Error ? error.message : String(error)
+      toast.error("更新会议名称失败", {
+        description: toUserMessage(error, '操作未完成，请重试。')
       });
     }
   };
@@ -447,213 +444,115 @@ const Sidebar: React.FC = () => {
   const renderCollapsedIcons = () => {
     if (!isCollapsed) return null;
 
-    const isHomePage = pathname === '/';
-    const isMeetingPage = pathname?.includes('/meeting-details');
-    const isSettingsPage = pathname === '/settings';
+    const iconButton = (label: string, onClick: () => void, icon: React.ReactNode, active = false, disabled = false) => (
+      <Tooltip key={label}>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={onClick}
+            disabled={disabled}
+            aria-label={label}
+            aria-current={active ? 'page' : undefined}
+            className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${active ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+          >
+            {icon}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="right">{label}</TooltipContent>
+      </Tooltip>
+    );
 
     return (
-      <TooltipProvider>
-        <div className="flex flex-col items-center space-y-4 mt-4">
-          <Logo isCollapsed={isCollapsed} />
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={() => router.push('/')}
-                className={`p-2 rounded-lg transition-colors duration-150 ${isHomePage ? 'bg-gray-100' : 'hover:bg-gray-100'
-                  }`}
-              >
-                <Home className="w-5 h-5 text-gray-600" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="right">
-              <p>Home</p>
-            </TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={handleRecordingToggle}
-                disabled={isRecording}
-                className={`p-2 ${isRecording ? 'bg-red-500 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600'} rounded-full transition-colors duration-150 shadow-sm`}
-              >
-                {isRecording ? (
-                  <Square className="w-5 h-5 text-white" />
-                ) : (
-                  <Mic className="w-5 h-5 text-white" />
-                )}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="right">
-              <p>{isRecording ? "Recording in progress..." : "Start Recording"}</p>
-            </TooltipContent>
-          </Tooltip>
-
-          {betaFeatures.importAndRetranscribe && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => openImportDialog()}
-                  className="p-2 rounded-lg transition-colors duration-150 hover:bg-blue-100 bg-blue-50"
-                >
-                  <Upload className="w-5 h-5 text-blue-600" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                <p>Import Audio</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={() => {
-                  if (isCollapsed) toggleCollapse();
-                  toggleFolder('meetings');
-                }}
-                className={`p-2 rounded-lg transition-colors duration-150 ${isMeetingPage ? 'bg-gray-100' : 'hover:bg-gray-100'
-                  }`}
-              >
-                <NotebookPen className="w-5 h-5 text-gray-600" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="right">
-              <p>Meeting Notes</p>
-            </TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={() => router.push('/settings')}
-                className={`p-2 rounded-lg transition-colors duration-150 ${isSettingsPage ? 'bg-gray-100' : 'hover:bg-gray-100'
-                  }`}
-              >
-                <Settings className="w-5 h-5 text-gray-600" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="right">
-              <p>Settings</p>
-            </TooltipContent>
-          </Tooltip>
-
-          <Info isCollapsed={isCollapsed} />
-        </div>
-      </TooltipProvider>
+      <nav aria-label="主要操作" className="flex flex-col items-center gap-2 px-2">
+        {iconButton('首页', () => router.push('/'), <Home className="h-[18px] w-[18px]" />, pathname === '/')}
+        {iconButton(isRecording ? '正在录音' : '开始录音', handleRecordingToggle, <Mic className="h-[18px] w-[18px]" />, false, isRecording)}
+        {betaFeatures.importAndRetranscribe && iconButton('导入音频', () => openImportDialog(), <Upload className="h-[18px] w-[18px]" />)}
+        {iconButton('会议记录', () => {
+          toggleCollapse();
+          if (!expandedFolders.has('meetings')) toggleFolder('meetings');
+        }, <NotebookPen className="h-[18px] w-[18px]" />, !!pathname?.includes('/meeting-details'))}
+      </nav>
     );
   };
 
-  // Find matching transcript snippet for a meeting item
   const findMatchingSnippet = (itemId: string) => {
     if (!searchQuery.trim() || !searchResults.length) return null;
     return searchResults.find(result => result.id === itemId);
   };
 
-  const renderItem = (item: SidebarItem, depth = 0) => {
+  const visibleMeetingCount = filteredSidebarItems
+    .filter(item => item.id === 'meetings')
+    .reduce((count, folder) => count + (folder.children?.length ?? 0), 0);
+
+  const renderItem = (item: SidebarItem, depth = 0): React.ReactNode => {
+    if (isCollapsed) return null;
     const isExpanded = expandedFolders.has(item.id);
-    const paddingLeft = `${depth * 12 + 12}px`;
     const isActive = item.type === 'file' && currentMeeting?.id === item.id;
     const isMeetingItem = item.id.includes('-') && !item.id.startsWith('intro-call');
-
-    // Check if this item has a matching transcript snippet
     const matchingResult = isMeetingItem ? findMatchingSnippet(item.id) : null;
-    const hasTranscriptMatch = !!matchingResult;
 
-    if (isCollapsed) return null;
+    if (item.type === 'folder') {
+      return (
+        <div key={item.id}>
+          <button
+            type="button"
+            onClick={() => toggleFolder(item.id)}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-muted"
+            aria-expanded={isExpanded}
+          >
+            <NotebookPen className="h-3.5 w-3.5" />
+            <span className="min-w-0 flex-1 truncate text-left">{item.id === 'meetings' ? '会议记录' : item.title}</span>
+            {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+          </button>
+          {isExpanded && item.children?.map(child => renderItem(child, depth + 1))}
+        </div>
+      );
+    }
 
     return (
-      <div key={item.id}>
-        <div
-          className={`flex items-center transition-all duration-150 group ${item.type === 'folder' && depth === 0
-            ? 'p-3 text-lg font-semibold h-10 mx-3 mt-3 rounded-lg'
-            : `px-3 py-2 my-0.5 rounded-md text-sm ${isActive ? 'bg-blue-100 text-blue-700 font-medium' :
-              hasTranscriptMatch ? 'bg-yellow-50' : 'hover:bg-gray-50'
-            } cursor-pointer`
-            }`}
-          style={item.type === 'folder' && depth === 0 ? {} : { paddingLeft }}
+      <div key={item.id} className="group relative my-1">
+        <button
+          type="button"
           onClick={() => {
-            if (item.type === 'folder') {
-              toggleFolder(item.id);
-            } else {
-              setCurrentMeeting({ id: item.id, title: item.title });
-              const basePath = item.id.startsWith('intro-call') ? '/' :
-                item.id.includes('-') ? `/meeting-details?id=${item.id}` : `/notes/${item.id}`;
-              router.push(basePath);
-            }
+            setCurrentMeeting({ id: item.id, title: item.title });
+            const basePath = item.id.startsWith('intro-call') ? '/' :
+              item.id.includes('-') ? `/meeting-details?id=${item.id}` : `/notes/${item.id}`;
+            router.push(basePath);
           }}
+          aria-current={isActive ? 'page' : undefined}
+          title={item.title}
+          className={`w-full rounded-xl border px-2.5 py-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${isActive ? 'border-primary/20 bg-primary/10 text-foreground shadow-sm' : 'border-transparent text-muted-foreground hover:bg-muted/70 hover:text-foreground'}`}
         >
-          {item.type === 'folder' ? (
-            <>
-              {item.id === 'meetings' ? (
-                <Calendar className="w-4 h-4 mr-2" />
-              ) : item.id === 'notes' ? (
-                <Calendar className="w-4 h-4 mr-2" />
-              ) : null}
-              <span className={depth === 0 ? "" : "font-medium"}>{item.title}</span>
-              <div className="ml-auto">
-                {isExpanded ? (
-                  <ChevronDown className="w-4 h-4 text-gray-500" />
-                ) : (
-                  <ChevronRight className="w-4 h-4 text-gray-500" />
-                )}
-              </div>
-              {searchQuery && item.id === 'meetings' && isSearching && (
-                <span className="ml-2 text-xs text-blue-500 animate-pulse">Searching...</span>
-              )}
-            </>
-          ) : (
-            <div className="flex flex-col w-full">
-              <div className="flex items-center w-full">
-                {isMeetingItem ? (
-                  <div className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full mr-2 bg-gray-100">
-                    <File className="w-3.5 h-3.5 text-gray-600" />
-                  </div>
-                ) : (
-                  <div className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full mr-2 bg-blue-100">
-                    <Plus className="w-3.5 h-3.5 text-blue-600" />
-                  </div>
-                )}
-                <span className="flex-1 break-words">{item.title}</span>
-                {isMeetingItem && (
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditStart(item.id, item.title);
-                      }}
-                      className="hover:text-blue-600 p-1 rounded-md hover:bg-blue-50 flex-shrink-0"
-                      aria-label="Edit meeting title"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeleteModalState({ isOpen: true, itemId: item.id });
-                      }}
-                      className="hover:text-red-600 p-1 rounded-md hover:bg-red-50 flex-shrink-0"
-                      aria-label="Delete meeting"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Show transcript match snippet if available */}
-              {hasTranscriptMatch && (
-                <div className="mt-1 ml-8 text-xs text-gray-500 bg-yellow-50 p-1.5 rounded border border-yellow-100 line-clamp-2">
-                  <span className="font-medium text-yellow-600">Match:</span> {matchingResult.matchContext}
-                </div>
-              )}
-            </div>
+          <span className="flex min-w-0 items-center gap-2.5">
+            <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${isActive ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'}`}>
+              {isMeetingItem ? <File className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+            </span>
+            <span className={`min-w-0 flex-1 truncate text-[13px] leading-5 ${isActive ? 'font-medium' : ''} ${isMeetingItem ? 'pr-12' : ''}`}>
+              {item.id.startsWith('intro-call') ? '新建会议' : item.title}
+            </span>
+          </span>
+          {matchingResult && (
+            <span className="ml-[38px] mt-1.5 block line-clamp-2 text-[11px] leading-5 text-muted-foreground">
+              <span className="mr-1 text-primary">匹配</span>{matchingResult.matchContext}
+            </span>
           )}
-        </div>
-        {item.type === 'folder' && isExpanded && item.children && (
-          <div className="ml-1">
-            {item.children.map(child => renderItem(child, depth + 1))}
+        </button>
+        {isMeetingItem && (
+          <div className={`absolute right-2 top-[13px] flex items-center gap-0.5 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 ${isActive ? 'opacity-100' : 'opacity-0'}`}>
+            <button
+              type="button"
+              onClick={(event) => { event.stopPropagation(); handleEditStart(item.id, item.title); }}
+              className="rounded-md p-1.5 text-muted-foreground hover:bg-background hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={`重命名：${item.title}`}
+              title="重命名"
+            ><Pencil className="h-3.5 w-3.5" /></button>
+            <button
+              type="button"
+              onClick={(event) => { event.stopPropagation(); setDeleteModalState({ isOpen: true, itemId: item.id }); }}
+              className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={`删除会议：${item.title}`}
+              title="删除会议"
+            ><Trash2 className="h-3.5 w-3.5" /></button>
           </div>
         )}
       </div>
@@ -661,221 +560,137 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <div className="fixed top-0 left-0 h-screen z-40">
-      {/* Floating collapse button */}
-      <button
-        onClick={toggleCollapse}
-        className="absolute -right-6 top-20 z-50 p-1 bg-white hover:bg-gray-100 rounded-full shadow-lg border"
-        style={{ transform: 'translateX(50%)' }}
-      >
-        {isCollapsed ? (
-          <ChevronRightCircle className="w-6 h-6" />
-        ) : (
-          <ChevronLeftCircle className="w-6 h-6" />
-        )}
-      </button>
+    <TooltipProvider delayDuration={250}>
+      <aside aria-label="会议导航" className={`agb-sidebar fixed inset-y-0 left-0 z-40 flex h-screen flex-col border-r border-border bg-card text-foreground transition-[width] duration-200 motion-reduce:transition-none ${isCollapsed ? 'w-16' : 'w-64'}`}>
+        <button
+          type="button"
+          onClick={toggleCollapse}
+          aria-label={isCollapsed ? '展开侧栏' : '收起侧栏'}
+          title={isCollapsed ? '展开侧栏' : '收起侧栏'}
+          className="absolute -right-3 top-6 z-50 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {isCollapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeftCircle className="h-3.5 w-3.5" />}
+        </button>
 
-      <div
-        className={`h-screen bg-white border-r shadow-sm flex flex-col transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-64'
-          }`}
-      >
-        {/*  Header with traffic light spacing */}
-        <div className="flex-shrink-0 h-22 flex items-center">
-
-          {/* Title container */}
-
-
-
-          <div className="flex-1">
-            {!isCollapsed && (
-              <div className="p-3">
-                {/* <span className="text-lg text-center border rounded-full bg-blue-50 border-white font-semibold text-gray-700 mb-2 block items-center">
-                  <span>Meetily</span>
-                </span> */}
-                <Logo isCollapsed={isCollapsed} />
-
-                <div className="relative mb-1">
-                  <InputGroup >
-                    <InputGroupInput placeholder='Search meeting content...' value={searchQuery}
-                      onChange={(e) => handleSearchChange(e.target.value)}
-                    />
-                    <InputGroupAddon>
-                      <SearchIcon />
-                    </InputGroupAddon>
-                    {searchQuery &&
-                      <InputGroupAddon align={'inline-end'}>
-                        <InputGroupButton
-                          onClick={() => handleSearchChange('')}
-                        >
-                          <X />
-                        </InputGroupButton>
-                      </InputGroupAddon>
-                    }
-                  </InputGroup>
-                </div>
-              </div>
-            )}
-          </div>
+        <div className={`flex shrink-0 items-center ${isCollapsed ? 'h-20 justify-center' : 'h-20 px-3 pr-5'}`}>
+          <Logo isCollapsed={isCollapsed} />
         </div>
 
-        {/* Main content - scrollable area */}
-        <div className="flex-1 flex flex-col min-h-0">
-          {/* Fixed navigation items */}
-          <div className="flex-shrink-0">
-            {!isCollapsed && (
-              <div
-                onClick={() => router.push('/')}
-                className="p-3  text-lg font-semibold items-center hover:bg-gray-100 h-10   flex mx-3 mt-3 rounded-lg cursor-pointer"
-              >
-                <Home className="w-4 h-4 mr-2" />
-                <span>Home</span>
-              </div>
-            )}
+        {!isCollapsed && (
+          <div className="shrink-0 px-3 pb-3">
+            <InputGroup className="h-9 rounded-xl border-border bg-background/60 shadow-none">
+              <InputGroupInput
+                placeholder="搜索会议或正文"
+                aria-label="搜索会议或正文"
+                value={searchQuery}
+                onChange={(event) => handleSearchChange(event.target.value)}
+                className="text-xs"
+              />
+              <InputGroupAddon><SearchIcon className="h-3.5 w-3.5 text-muted-foreground" /></InputGroupAddon>
+              {searchQuery && (
+                <InputGroupAddon align="inline-end">
+                  <InputGroupButton onClick={() => handleSearchChange('')} aria-label="清除搜索" title="清除搜索">
+                    <X className="h-3.5 w-3.5" />
+                  </InputGroupButton>
+                </InputGroupAddon>
+              )}
+            </InputGroup>
           </div>
+        )}
 
-          {/* Content area */}
-          <div className="flex-1 flex flex-col min-h-0">
-            {renderCollapsedIcons()}
-            {/* Meeting Notes folder header - fixed */}
-            {!isCollapsed && (
-              <div className="flex-shrink-0">
-                {filteredSidebarItems.filter(item => item.type === 'folder').map(item => (
-                  <div key={item.id}>
-                    <div
-                      className="flex items-center transition-all duration-150 p-3 text-lg font-semibold h-10 mx-3 mt-3 rounded-lg"
-                    >
-                      <NotebookPen className="w-4 h-4 mr-2 text-gray-600" />
-                      <span className="text-gray-700">{item.title}</span>
-                      {searchQuery && item.id === 'meetings' && isSearching && (
-                        <span className="ml-2 text-xs text-blue-500 animate-pulse">Searching...</span>
-                      )}
-                    </div>
-                  </div>
-                ))}
+        <div className="flex min-h-0 flex-1 flex-col">
+          {renderCollapsedIcons()}
+          {!isCollapsed && (
+            <>
+              <nav aria-label="主要操作" className="shrink-0 space-y-1 px-3">
+                <button
+                  type="button"
+                  onClick={() => router.push('/')}
+                  aria-current={pathname === '/' ? 'page' : undefined}
+                  className={`flex h-9 w-full items-center gap-2.5 rounded-xl px-3 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${pathname === '/' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+                ><Home className="h-4 w-4" />首页</button>
+                <button
+                  type="button"
+                  onClick={handleRecordingToggle}
+                  disabled={isRecording}
+                  className="flex h-9 w-full items-center gap-2.5 rounded-xl bg-primary px-3 text-[13px] font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
+                ><Mic className="h-4 w-4" />{isRecording ? '正在录音' : '开始录音'}</button>
+                {betaFeatures.importAndRetranscribe && (
+                  <button
+                    type="button"
+                    onClick={() => openImportDialog()}
+                    className="flex h-9 w-full items-center gap-2.5 rounded-xl px-3 text-[13px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  ><Upload className="h-4 w-4" />导入音频</button>
+                )}
+              </nav>
+
+              <div className="mt-5 flex shrink-0 items-center gap-2 px-5 pb-2 text-[11px] font-medium text-muted-foreground">
+                <NotebookPen className="h-3.5 w-3.5" />
+                <span>会议记录</span>
+                <span className="ml-auto tabular-nums">{searchQuery.trim() ? `${visibleMeetingCount} / ${meetings.length}` : meetings.length}</span>
               </div>
-            )}
-
-            {/* Scrollable meeting items */}
-            {!isCollapsed && (
-              <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0">
+              {isSearching && searchQuery.trim() && <p role="status" className="px-5 pb-2 text-[11px] text-primary">正在搜索…</p>}
+              <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-3 pb-3">
                 {filteredSidebarItems
                   .filter(item => item.type === 'folder' && expandedFolders.has(item.id) && item.children)
-                  .map(item => (
-                    <div key={`${item.id}-children`} className="mx-3">
-                      {item.children!.map(child => renderItem(child, 1))}
-                    </div>
-                  ))}
+                  .map(item => <div key={item.id}>{item.children!.map(child => renderItem(child, 1))}</div>)}
+                {visibleMeetingCount === 0 && !isSearching && (
+                  <p className="px-2 py-5 text-xs leading-6 text-muted-foreground">
+                    {searchQuery.trim() ? '没有找到相关会议。' : '还没有会议记录。开始录音，或导入已有音频。'}
+                  </p>
+                )}
               </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
 
-        {/* Footer */}
-        {!isCollapsed && (
+        <div className={`flex shrink-0 flex-col gap-1 border-t border-border/70 py-3 ${isCollapsed ? 'items-center px-2' : 'px-3'}`}>
+          <ThemeSwitcher compact={isCollapsed} />
+          <button
+            type="button"
+            onClick={() => router.push('/settings')}
+            aria-label="设置"
+            title="设置"
+            aria-current={pathname === '/settings' ? 'page' : undefined}
+            className={`flex items-center gap-2 rounded-lg text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${isCollapsed ? 'h-9 w-9 justify-center' : 'w-full px-2.5 py-2'} ${pathname === '/settings' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+          ><Settings className="h-4 w-4 shrink-0" />{!isCollapsed && '设置'}</button>
+          <Info isCollapsed={isCollapsed} />
+        </div>
+      </aside>
 
-          <div className="flex-shrink-0 p-2 border-t border-gray-100">
-            <button
-              onClick={handleRecordingToggle}
-              disabled={isRecording}
-              className={`w-full flex items-center justify-center px-3 py-2 text-sm font-medium text-white ${isRecording ? 'bg-red-300 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600'} rounded-lg transition-colors shadow-sm`}
-            >
-              {isRecording ? (
-                <>
-                  <Square className="w-4 h-4 mr-2" />
-                  <span>Recording in progress...</span>
-                </>
-              ) : (
-                <>
-                  <Mic className="w-4 h-4 mr-2" />
-                  <span>Start Recording</span>
-                </>
-              )}
-            </button>
-
-            {betaFeatures.importAndRetranscribe && (
-              <button
-                onClick={() => openImportDialog()}
-                className="w-full flex items-center justify-center px-3 py-2 mt-1 text-sm font-medium text-gray-700 bg-blue-100 hover:bg-blue-200 rounded-lg transition-colors shadow-sm"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                <span>Import Audio</span>
-              </button>
-            )}
-
-            <button
-              onClick={() => router.push('/settings')}
-              className="w-full flex items-center justify-center px-3 py-1.5 mt-1 mb-1 text-sm font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors shadow-sm"
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              <span>Settings</span>
-            </button>
-            <Info isCollapsed={isCollapsed} />
-            <div className="w-full flex items-center justify-center px-3 py-1 text-xs text-gray-400">
-              v0.4.1
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Confirmation Modal for Delete */}
       <ConfirmationModal
         isOpen={deleteModalState.isOpen}
-        text="Are you sure you want to delete this meeting? This action cannot be undone."
+        text="确定删除这场会议吗？此操作无法撤销。"
         onConfirm={handleDeleteConfirm}
         onCancel={() => setDeleteModalState({ isOpen: false, itemId: null })}
       />
 
-      {/* Edit Meeting Title Modal */}
-      <Dialog open={editModalState.isOpen} onOpenChange={(open) => {
-        if (!open) handleEditCancel();
-      }}>
-        <DialogContent className="sm:max-w-[425px]">
-          <VisuallyHidden>
-            <DialogTitle>Edit Meeting Title</DialogTitle>
-          </VisuallyHidden>
-          <div className="py-4">
-            <h3 className="text-lg font-semibold mb-4">Edit Meeting Title</h3>
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="meeting-title" className="block text-sm font-medium text-gray-700 mb-2">
-                  Meeting Title
-                </label>
-                <input
-                  id="meeting-title"
-                  type="text"
-                  value={editingTitle}
-                  onChange={(e) => setEditingTitle(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleEditConfirm();
-                    } else if (e.key === 'Escape') {
-                      handleEditCancel();
-                    }
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter meeting title"
-                  autoFocus
-                />
-              </div>
-            </div>
+      <Dialog open={editModalState.isOpen} onOpenChange={(open) => { if (!open) handleEditCancel(); }}>
+        <DialogContent className="rounded-2xl border-border bg-card text-foreground sm:max-w-[425px]">
+          <DialogTitle>重命名会议</DialogTitle>
+          <div className="py-2">
+            <label htmlFor="meeting-title" className="mb-2 block text-xs font-medium text-muted-foreground">会议名称</label>
+            <input
+              id="meeting-title"
+              type="text"
+              value={editingTitle}
+              onChange={(event) => setEditingTitle(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') handleEditConfirm();
+                else if (event.key === 'Escape') handleEditCancel();
+              }}
+              className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="输入会议名称"
+              autoFocus
+            />
           </div>
           <DialogFooter>
-            <button
-              onClick={handleEditCancel}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleEditConfirm}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
-            >
-              Save
-            </button>
+            <button onClick={handleEditCancel} className="rounded-lg bg-muted px-4 py-2 text-sm text-foreground hover:bg-muted/80">取消</button>
+            <button onClick={handleEditConfirm} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">保存</button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </TooltipProvider>
   );
 };
 

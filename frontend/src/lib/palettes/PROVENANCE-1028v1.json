@@ -1,0 +1,218 @@
+{
+  "source_application": "AiGoodBro local authorized worktree",
+  "reference": "Resources/Palettes",
+  "copied_unmodified": [
+    {
+      "palette": "default",
+      "source": "Resources/Palettes/codexu.default/manifest.json",
+      "destination": "frontend/src/lib/palettes/default/manifest.json",
+      "sha256": "4655ddebace5f0be4d4fe4f83672a40042fe0373126cb7fb762b02b5ec087076"
+    },
+    {
+      "palette": "default",
+      "source": "Resources/Palettes/codexu.default/tokens/light.json",
+      "destination": "frontend/src/lib/palettes/default/tokens/light.json",
+      "sha256": "3096b9b49a1936d2018c9c14d4f5baf8177e9b3ac2a8b7606b9c8a539cd1fec1"
+    },
+    {
+      "palette": "default",
+      "source": "Resources/Palettes/codexu.default/tokens/dark.json",
+      "destination": "frontend/src/lib/palettes/default/tokens/dark.json",
+      "sha256": "3096b9b49a1936d2018c9c14d4f5baf8177e9b3ac2a8b7606b9c8a539cd1fec1"
+    },
+    {
+      "palette": "default",
+      "source": "Resources/Palettes/codexu.default/localizations/zh-Hans.json",
+      "destination": "frontend/src/lib/palettes/default/localizations/zh-Hans.json",
+      "sha256": "82b582e14b0b30c3f2c9fd82fd17561555f6aa1aa1a67095eccb751ce3ad200d"
+    },
+    {
+      "palette": "default",
+      "source": "Resources/Palettes/codexu.default/LICENSE",
+      "destination": "frontend/src/lib/palettes/default/LICENSE",
+      "sha256": "4199e0ec7c8a1874adbe6cd75aa7626d2261f2886122112973c5e4784ef18d48"
+    },
+    {
+      "palette": "liquid-keycap",
+      "source": "Resources/Palettes/codexu.liquid-keycap/manifest.json",
+      "destination": "frontend/src/lib/palettes/liquid-keycap/manifest.json",
+      "sha256": "6cd9e90f8f568ad043a8be5b0811fa21369a38816a4eda4c86b737cb72c80526"
+    },
+    {
+      "palette": "liquid-keycap",
+      "source": "Resources/Palettes/codexu.liquid-keycap/tokens/light.json",
+      "destination": "frontend/src/lib/palettes/liquid-keycap/tokens/light.json",
+      "sha256": "10d89a087c62855aeee96e21a1956f746a95b9057442d6d2bce8423ef2756d42"
+    },
+    {
+      "palette": "liquid-keycap",
+      "source": "Resources/Palettes/codexu.liquid-keycap/tokens/dark.json",
+      "destination": "frontend/src/lib/palettes/liquid-keycap/tokens/dark.json",
+      "sha256": "cd56a62b3c4b80f61db30169ca8ed59208d8b73274b47d5e8d8848a8290b6cdd"
+    },
+    {
+      "palette": "liquid-keycap",
+      "source": "Resources/Palettes/codexu.liquid-keycap/localizations/zh-Hans.json",
+      "destination": "frontend/src/lib/palettes/liquid-keycap/localizations/zh-Hans.json",
+      "sha256": "20d687274b8f1ca4db9b47a89ef5b9486e296e56f32aeff8f7d6f6d1acbdda18"
+    },
+    {
+      "palette": "liquid-keycap",
+      "source": "Resources/Palettes/codexu.liquid-keycap/LICENSE",
+      "destination": "frontend/src/lib/palettes/liquid-keycap/LICENSE",
+      "sha256": "b3df46e55f9cb40a9671eb2cc97ad75a0af638c1a32a6c28d28c9cd266ec3a14"
+    },
+    {
+      "palette": "blue-white-porcelain",
+      "source": "Resources/Palettes/codexu.blue-white-porcelain/manifest.json",
+      "destination": "frontend/src/lib/palettes/blue-white-porcelain/manifest.json",
+      "sha256": "ad08676e58efdbde70827239d9fdf92d990f8636b7293eab00aaffb18d1727af"
+    },
+    {
+      "palette": "blue-white-porcelain",
+      "source": "Resources/Palettes/codexu.blue-white-porcelain/tokens/light.json",
+      "destination": "frontend/src/lib/palettes/blue-white-porcelain/tokens/light.json",
+      "sha256": "4393698e84836c01704d9b8f13f7c0ebeb2b8295f03b906c44881fd74dcce156"
+    },
+    {
+      "palette": "blue-white-porcelain",
+      "source": "Resources/Palettes/codexu.blue-white-porcelain/tokens/dark.json",
+      "destination": "frontend/src/lib/palettes/blue-white-porcelain/tokens/dark.json",
+      "sha256": "6a65f4065b8515d52344b4239765883b16bc175086237501d9314e9898166210"
+    },
+    {
+      "palette": "blue-white-porcelain",
+      "source": "Resources/Palettes/codexu.blue-white-porcelain/localizations/zh-Hans.json",
+      "destination": "frontend/src/lib/palettes/blue-white-porcelain/localizations/zh-Hans.json",
+      "sha256": "f8e80baffd93a9767b20288c92990d29598894534feaa4898a2b0d15fde739a3"
+    },
+    {
+      "palette": "blue-white-porcelain",
+      "source": "Resources/Palettes/codexu.blue-white-porcelain/LICENSE",
+      "destination": "frontend/src/lib/palettes/blue-white-porcelain/LICENSE",
+      "sha256": "4199e0ec7c8a1874adbe6cd75aa7626d2261f2886122112973c5e4784ef18d48"
+    },
+    {
+      "palette": "dunhuang-apsara",
+      "source": "Resources/Palettes/codexu.dunhuang-apsara/manifest.json",
+      "destination": "frontend/src/lib/palettes/dunhuang-apsara/manifest.json",
+      "sha256": "6c7070544bf8357a17817a918578850186fa010296dcb7550f8a6b727e1d2e56"
+    },
+    {
+      "palette": "dunhuang-apsara",
+      "source": "Resources/Palettes/codexu.dunhuang-apsara/tokens/light.json",
+      "destination": "frontend/src/lib/palettes/dunhuang-apsara/tokens/light.json",
+      "sha256": "3b5d9ec187ca7796f70fa3facdc6e969fe99a7bc3d6b11334c5e7f2e092b25e0"
+    },
+    {
+      "palette": "dunhuang-apsara",
+      "source": "Resources/Palettes/codexu.dunhuang-apsara/tokens/dark.json",
+      "destination": "frontend/src/lib/palettes/dunhuang-apsara/tokens/dark.json",
+      "sha256": "4544d05ad642075a000cdbd8727912293dca2fa47e21726ccd382e377f92479c"
+    },
+    {
+      "palette": "dunhuang-apsara",
+      "source": "Resources/Palettes/codexu.dunhuang-apsara/localizations/zh-Hans.json",
+      "destination": "frontend/src/lib/palettes/dunhuang-apsara/localizations/zh-Hans.json",
+      "sha256": "6dd81e16eb8d9d3a782e7cbf16325996ad06c03b549ca16e3a984d4cc25057be"
+    },
+    {
+      "palette": "dunhuang-apsara",
+      "source": "Resources/Palettes/codexu.dunhuang-apsara/LICENSE",
+      "destination": "frontend/src/lib/palettes/dunhuang-apsara/LICENSE",
+      "sha256": "4199e0ec7c8a1874adbe6cd75aa7626d2261f2886122112973c5e4784ef18d48"
+    },
+    {
+      "palette": "forbidden-city-red",
+      "source": "Resources/Palettes/codexu.forbidden-city-red/manifest.json",
+      "destination": "frontend/src/lib/palettes/forbidden-city-red/manifest.json",
+      "sha256": "b612a0dc254d155732b2c0acd5d429b0497d1bd662e5f4189ba26900a0764a67"
+    },
+    {
+      "palette": "forbidden-city-red",
+      "source": "Resources/Palettes/codexu.forbidden-city-red/tokens/light.json",
+      "destination": "frontend/src/lib/palettes/forbidden-city-red/tokens/light.json",
+      "sha256": "88cbb1abad2a562fe813cd3ecfea4b9b5eb2fed45047d08446d9d08e816a3e62"
+    },
+    {
+      "palette": "forbidden-city-red",
+      "source": "Resources/Palettes/codexu.forbidden-city-red/tokens/dark.json",
+      "destination": "frontend/src/lib/palettes/forbidden-city-red/tokens/dark.json",
+      "sha256": "3ad3f66dd498a5709381a8a4942685101a1d7618e7938280d1deed6cafe85d0c"
+    },
+    {
+      "palette": "forbidden-city-red",
+      "source": "Resources/Palettes/codexu.forbidden-city-red/localizations/zh-Hans.json",
+      "destination": "frontend/src/lib/palettes/forbidden-city-red/localizations/zh-Hans.json",
+      "sha256": "2880ed52346194dbb67083f78a8ede5917d3b6c280bfc8cdc2de434604b430e6"
+    },
+    {
+      "palette": "forbidden-city-red",
+      "source": "Resources/Palettes/codexu.forbidden-city-red/LICENSE",
+      "destination": "frontend/src/lib/palettes/forbidden-city-red/LICENSE",
+      "sha256": "4199e0ec7c8a1874adbe6cd75aa7626d2261f2886122112973c5e4784ef18d48"
+    },
+    {
+      "palette": "orchid-dawn",
+      "source": "Resources/Palettes/codexu.orchid-dawn/manifest.json",
+      "destination": "frontend/src/lib/palettes/orchid-dawn/manifest.json",
+      "sha256": "79da7295365aff5b78129ac1160a985834ee54c6e56decd2257fd2023031cc0b"
+    },
+    {
+      "palette": "orchid-dawn",
+      "source": "Resources/Palettes/codexu.orchid-dawn/tokens/light.json",
+      "destination": "frontend/src/lib/palettes/orchid-dawn/tokens/light.json",
+      "sha256": "884f19ace930a79475ef21a6e8c06a8f770d701deb07bc299ed5b2687b25b59a"
+    },
+    {
+      "palette": "orchid-dawn",
+      "source": "Resources/Palettes/codexu.orchid-dawn/tokens/dark.json",
+      "destination": "frontend/src/lib/palettes/orchid-dawn/tokens/dark.json",
+      "sha256": "14d891cc8c82891e0f99f93714e683a745ac577bb1e6ebb33462888dfe68fa65"
+    },
+    {
+      "palette": "orchid-dawn",
+      "source": "Resources/Palettes/codexu.orchid-dawn/localizations/zh-Hans.json",
+      "destination": "frontend/src/lib/palettes/orchid-dawn/localizations/zh-Hans.json",
+      "sha256": "ba535f63ff5eda26dc870f42512a90324a703ee662fb888d31107cbe3bb54bd1"
+    },
+    {
+      "palette": "orchid-dawn",
+      "source": "Resources/Palettes/codexu.orchid-dawn/LICENSE",
+      "destination": "frontend/src/lib/palettes/orchid-dawn/LICENSE",
+      "sha256": "4199e0ec7c8a1874adbe6cd75aa7626d2261f2886122112973c5e4784ef18d48"
+    },
+    {
+      "palette": "thousand-li-landscape",
+      "source": "Resources/Palettes/codexu.thousand-li-landscape/manifest.json",
+      "destination": "frontend/src/lib/palettes/thousand-li-landscape/manifest.json",
+      "sha256": "4a5b15c9cfba93d60a86627f04012a43f1fc0b7489020bf9f1c313d840cb62dd"
+    },
+    {
+      "palette": "thousand-li-landscape",
+      "source": "Resources/Palettes/codexu.thousand-li-landscape/tokens/light.json",
+      "destination": "frontend/src/lib/palettes/thousand-li-landscape/tokens/light.json",
+      "sha256": "4b64a6f7b6e32a83e8000a062d098e28cc5b04c98c1b23a75fca7c02249d8f3f"
+    },
+    {
+      "palette": "thousand-li-landscape",
+      "source": "Resources/Palettes/codexu.thousand-li-landscape/tokens/dark.json",
+      "destination": "frontend/src/lib/palettes/thousand-li-landscape/tokens/dark.json",
+      "sha256": "3e57605b114a1b1aa4aca61a1a899ccbb01c76a4f60e9a376819d728c43b82f6"
+    },
+    {
+      "palette": "thousand-li-landscape",
+      "source": "Resources/Palettes/codexu.thousand-li-landscape/localizations/zh-Hans.json",
+      "destination": "frontend/src/lib/palettes/thousand-li-landscape/localizations/zh-Hans.json",
+      "sha256": "f5c5b5442e59284933a8aba3e3dc08a9d68ffaf3111d0315ce225a71a3dc325a"
+    },
+    {
+      "palette": "thousand-li-landscape",
+      "source": "Resources/Palettes/codexu.thousand-li-landscape/LICENSE",
+      "destination": "frontend/src/lib/palettes/thousand-li-landscape/LICENSE",
+      "sha256": "4199e0ec7c8a1874adbe6cd75aa7626d2261f2886122112973c5e4784ef18d48"
+    }
+  ],
+  "license": "MIT; complete original copyright/license retained separately for every palette (including Codex Account Manager contributors on liquid-keycap).",
+  "adaptation": "Original source colors retained. UI role mapping derives readable text accents and macOS neutral surfaces locally."
+}

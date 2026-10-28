@@ -338,6 +338,7 @@ impl SummaryService {
         started_at: DateTime<Utc>,
         cancellation_token: CancellationToken,
         text: String,
+        speaker_transcript_updated_at: Option<String>,
         model_provider: String,
         model_name: String,
         custom_prompt: String,
@@ -575,7 +576,7 @@ impl SummaryService {
                     "✓ Successfully processed {} chunks for meeting_id: {}. Duration: {:.2}s",
                     generated.successful_chunk_count, meeting_id, duration
                 );
-                let result_json = match build_summary_result_json(
+                let mut result_json = match build_summary_result_json(
                     &generated.final_markdown,
                     &generated.english_markdown,
                     cache_source,
@@ -590,6 +591,10 @@ impl SummaryService {
                         return;
                     }
                 };
+
+                if let Some(revision) = speaker_transcript_updated_at {
+                    result_json["speaker_transcript_updated_at"] = serde_json::Value::String(revision);
+                }
 
                 match SummaryProcessesRepository::update_process_completed(
                     &pool,

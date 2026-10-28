@@ -77,3 +77,12 @@ experiments/
 target/
 
 frontend/src-tauri/binaries/
+# Local meeting runtime and user data
+__pycache__/
+*.py[cod]
+*.sqlite
+*.sqlite-*
+*.db-wal
+*.db-shm
+.env.*
+!.env.example

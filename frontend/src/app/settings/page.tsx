@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
-import { ArrowLeft, Settings2, Mic, Database as DatabaseIcon, SparkleIcon, FlaskConical } from 'lucide-react';
+import { ArrowLeft, Settings2, Mic, Database as DatabaseIcon, SparkleIcon, FlaskConical, Palette } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { invoke } from '@tauri-apps/api/core';
 import { motion } from 'framer-motion';
@@ -12,14 +12,16 @@ import { SummaryModelSettings } from '@/components/SummaryModelSettings';
 import { BetaSettings } from '@/components/BetaSettings';
 import { useConfig } from '@/contexts/ConfigContext';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import AppearanceSettings from '@/components/AppearanceSettings';
 
 // Tabs configuration (constant)
 const TABS = [
-  { value: 'general', label: 'General', icon: Settings2 },
-  { value: 'recording', label: 'Recordings', icon: Mic },
-  { value: 'Transcriptionmodels', label: 'Transcription', icon: DatabaseIcon },
-  { value: 'summaryModels', label: 'Summary', icon: SparkleIcon },
-  { value: 'beta', label: 'Beta', icon: FlaskConical }
+  { value: 'appearance', label: '外观', icon: Palette },
+  { value: 'general', label: '通用', icon: Settings2 },
+  { value: 'recording', label: '录音', icon: Mic },
+  { value: 'Transcriptionmodels', label: '转写模型', icon: DatabaseIcon },
+  { value: 'summaryModels', label: '纪要模型', icon: SparkleIcon },
+  { value: 'beta', label: '实验功能', icon: FlaskConical }
 ] as const;
 
 export default function SettingsPage() {
@@ -27,7 +29,7 @@ export default function SettingsPage() {
   const { transcriptModelConfig, setTranscriptModelConfig } = useConfig();
 
   // Animation state for tabs
-  const [activeTab, setActiveTab] = useState('general');
+  const [activeTab, setActiveTab] = useState('appearance');
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
 
@@ -63,29 +65,29 @@ export default function SettingsPage() {
   }, [activeTab]);
 
   return (
-    <div className="h-screen bg-gray-50 flex flex-col">
+    <div className="agb-page h-screen min-w-0 flex flex-col">
       {/* Fixed Header */}
-      <div className="sticky top-0 z-10 bg-gray-50 border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-8 py-6">
-          <div className="flex items-center gap-4">
+      <div className="agb-header sticky top-0 z-10 border-b border-border">
+        <div className="max-w-5xl mx-auto px-5 py-5 sm:px-7">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => router.back()}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+              aria-label="返回上一页"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span>Back</span>
             </button>
-            <h1 className="text-3xl font-bold">Settings</h1>
+            <div><h1 className="text-xl font-semibold tracking-tight">设置</h1><p className="mt-0.5 text-xs text-muted-foreground">外观、录音与本地模型</p></div>
           </div>
         </div>
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-6xl mx-auto p-8 pt-6">
+      <div className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
+        <div className="max-w-5xl mx-auto px-5 py-5 sm:px-7">
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="bg-transparent relative rounded-none border-b border-gray-200 p-0 h-auto">
+            <TabsList className="bg-transparent relative rounded-none border-b border-border p-0 h-auto w-full justify-start overflow-x-auto">
               {TABS.map((tab, index) => {
                 const Icon = tab.icon;
                 return (
@@ -93,7 +95,7 @@ export default function SettingsPage() {
                     key={tab.value}
                     value={tab.value}
                     ref={el => { tabRefs.current[index] = el }}
-                    className="flex items-center gap-2 px-6 py-4 bg-transparent rounded-none border-0 data-[state=active]:bg-transparent data-[state=active]:text-blue-600 data-[state=active]:shadow-none text-gray-600 hover:text-gray-900 relative z-10"
+                    className="flex shrink-0 items-center gap-2 px-3 py-3 bg-transparent rounded-none border-0 data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none text-muted-foreground hover:text-foreground relative z-10 text-sm"
                   >
                     <Icon className="w-4 h-4" />
                     {tab.label}
@@ -102,26 +104,31 @@ export default function SettingsPage() {
               })}
 
               <motion.div
-                className="absolute bottom-0 z-20 h-0.5 bg-blue-600"
+                className="absolute bottom-0 z-20 h-0.5 bg-primary"
                 layoutId="underline"
                 style={{ left: underlineStyle.left, width: underlineStyle.width }}
                 transition={{ type: 'spring', stiffness: 400, damping: 40 }}
               />
             </TabsList>
 
-            <TabsContent value="general">
+            <TabsContent value="appearance" className="mt-5">
+              <AppearanceSettings />
+            </TabsContent>
+            <TabsContent value="general" className="mt-5">
               <PreferenceSettings />
             </TabsContent>
-            <TabsContent value="recording">
-              <RecordingSettings />
+            <TabsContent value="recording" className="mt-5">
+              <div className="agb-card p-5"><RecordingSettings /></div>
             </TabsContent>
-            <TabsContent value="Transcriptionmodels">
+            <TabsContent value="Transcriptionmodels" className="mt-5">
+              <div className="agb-card p-5">
               <TranscriptSettings
                 transcriptModelConfig={transcriptModelConfig}
                 setTranscriptModelConfig={setTranscriptModelConfig}
               />
+              </div>
             </TabsContent>
-            <TabsContent value="summaryModels">
+            <TabsContent value="summaryModels" className="mt-5">
               <SummaryModelSettings />
             </TabsContent>
             <TabsContent value="beta" className="mt-6">

@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { ButtonGroup } from '@/components/ui/button-group';
 import { Copy, FolderOpen, RefreshCw } from 'lucide-react';
 import Analytics from '@/lib/analytics';
 import { RetranscribeDialog } from './RetranscribeDialog';
@@ -38,8 +37,7 @@ export function TranscriptButtonGroup({
   }, [onRefetchTranscripts]);
 
   return (
-    <div className="flex items-center justify-center w-full gap-2">
-      <ButtonGroup>
+    <div className="agb-toolbar flex w-full flex-wrap items-start gap-2">
         <Button
           variant="outline"
           size="sm"
@@ -49,42 +47,49 @@ export function TranscriptButtonGroup({
             onCopyTranscript();
           }}
           disabled={transcriptCount === 0}
-          title={transcriptCount === 0 ? 'No transcript available' : 'Copy Transcript'}
+          title={transcriptCount === 0 ? '暂无可复制的转写' : '复制转写'}
+          aria-label="复制转写"
         >
           <Copy />
-          <span className="hidden @[22rem]:inline">Copy</span>
+          <span>复制</span>
         </Button>
 
+        <details>
+          <summary className="flex h-8 cursor-pointer list-none items-center rounded-md px-2.5 text-xs text-muted-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">更多</summary>
+          <div className="mt-1 flex min-w-40 flex-col gap-1 rounded-xl border border-border bg-popover p-1.5">
         <Button
           size="sm"
-          variant="outline"
-          className="px-2 @[22rem]:px-4"
+          variant="ghost"
+          className="justify-start px-2"
           onClick={() => {
             Analytics.trackButtonClick('open_recording_folder', 'meeting_details');
             onOpenMeetingFolder();
           }}
-          title="Open Recording Folder"
+          title="打开录音文件夹"
+          aria-label="打开录音文件夹"
         >
-          <FolderOpen className="@[22rem]:mr-2" size={18} />
-          <span className="hidden @[22rem]:inline">Recording</span>
+          <FolderOpen size={16} />
+          <span>打开录音文件夹</span>
         </Button>
 
         {betaFeatures.importAndRetranscribe && meetingId && meetingFolderPath && (
           <Button
             size="sm"
-            variant="outline"
-            className="bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 border-blue-200 px-2 @[22rem]:px-4"
+            variant="ghost"
+            className="justify-start px-2"
             onClick={() => {
               Analytics.trackButtonClick('enhance_transcript', 'meeting_details');
               setShowRetranscribeDialog(true);
             }}
-            title="Retranscribe to enhance your recorded audio"
+            title="重新转写录音"
+            aria-label="重新转写录音"
           >
-            <RefreshCw className="@[22rem]:mr-2" size={18} />
-            <span className="hidden @[22rem]:inline">Enhance</span>
+            <RefreshCw size={16} />
+            <span>重新转写</span>
           </Button>
         )}
-      </ButtonGroup>
+          </div>
+        </details>
 
       {betaFeatures.importAndRetranscribe && meetingId && meetingFolderPath && (
         <RetranscribeDialog

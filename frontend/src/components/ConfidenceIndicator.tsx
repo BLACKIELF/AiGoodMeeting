@@ -24,10 +24,10 @@ export const ConfidenceIndicator: React.FC<ConfidenceIndicatorProps> = ({
 
   // Get descriptive label for accessibility
   const getConfidenceLabel = (conf: number): string => {
-    if (conf >= 0.8) return 'High confidence';
-    if (conf >= 0.7) return 'Good confidence';
-    if (conf >= 0.4) return 'Medium confidence';
-    return 'Low confidence';
+    if (conf >= 0.8) return "可信度高";
+    if (conf >= 0.7) return "可信度较高";
+    if (conf >= 0.4) return "可信度一般";
+    return "可信度低";
   };
 
   const confidencePercent = (confidence * 100).toFixed(0);
@@ -37,8 +37,8 @@ export const ConfidenceIndicator: React.FC<ConfidenceIndicatorProps> = ({
   return (
     <div
       className="flex items-center gap-1"
-      title={`${confidencePercent}% confidence - ${label}`}
-      aria-label={`Transcription confidence: ${confidencePercent}%`}
+      title={`转写可信度 ${confidencePercent}% · ${label}`}
+      aria-label={`转写可信度：${confidencePercent}%`}
     >
       <div
         className={`w-2 h-2 rounded-full ${colorClass} transition-colors duration-200`}

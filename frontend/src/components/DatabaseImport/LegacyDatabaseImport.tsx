@@ -1,5 +1,6 @@
 'use client';
 
+import { toUserMessage } from '@/lib/user-message';
 import { useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { toast } from 'sonner';
@@ -42,14 +43,14 @@ export function LegacyDatabaseImport({ isOpen, onComplete }: LegacyDatabaseImpor
         setDetectedPath(dbPath);
         setImportState('idle');
       } else {
-        setErrorMessage('No database found at selected location. Please select the Meetily folder, backend folder, or the database file directly.');
+        setErrorMessage("所选位置未找到数据库，请选择原 Meetily 文件夹、backend 文件夹或数据库文件。");
         setDetectedPath(null);
         setImportState('error');
         setTimeout(() => setImportState('idle'), 3000);
       }
     } catch (error) {
       console.error('Error browsing for database:', error);
-      setErrorMessage(String(error));
+      setErrorMessage(toUserMessage(error, "数据库操作未完成，请重试。"));
       setImportState('error');
       setTimeout(() => setImportState('idle'), 3000);
     }
@@ -66,7 +67,7 @@ export function LegacyDatabaseImport({ isOpen, onComplete }: LegacyDatabaseImpor
       });
 
       setImportState('success');
-      toast.success('Database imported successfully! Reloading...');
+      toast.success("历史会议已导入，正在重新打开…");
 
       // Wait 1 second for user to see success, then reload window to refresh all data
       setTimeout(() => {
@@ -74,9 +75,9 @@ export function LegacyDatabaseImport({ isOpen, onComplete }: LegacyDatabaseImpor
       }, 1000);
     } catch (error) {
       console.error('Error importing database:', error);
-      setErrorMessage(String(error));
+      setErrorMessage(toUserMessage(error, "数据库操作未完成，请重试。"));
       setImportState('error');
-      toast.error(`Import failed: ${error}`);
+      toast.error(toUserMessage(error, "历史会议导入失败，请重试。"));
       setTimeout(() => setImportState('idle'), 3000);
     }
   };
@@ -88,7 +89,7 @@ export function LegacyDatabaseImport({ isOpen, onComplete }: LegacyDatabaseImpor
       await invoke('initialize_fresh_database');
 
       setImportState('success');
-      toast.success('Database initialized successfully! Starting app...');
+      toast.success("数据目录已准备好，正在启动…");
 
       // Wait 1 second for user to see success, then reload window to start fresh
       setTimeout(() => {
@@ -96,9 +97,9 @@ export function LegacyDatabaseImport({ isOpen, onComplete }: LegacyDatabaseImpor
       }, 1000);
     } catch (error) {
       console.error('Error initializing database:', error);
-      setErrorMessage(String(error));
+      setErrorMessage(toUserMessage(error, "数据库操作未完成，请重试。"));
       setImportState('error');
-      toast.error(`Initialization failed: ${error}`);
+      toast.error(toUserMessage(error, "数据目录初始化失败，请重试。"));
       setTimeout(() => setImportState('idle'), 3000);
     }
   };
@@ -119,9 +120,9 @@ export function LegacyDatabaseImport({ isOpen, onComplete }: LegacyDatabaseImpor
     <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent className="sm:max-w-[600px]" onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle className="text-2xl">Welcome to Meetily!</DialogTitle>
+          <DialogTitle className="text-2xl">欢迎使用 AiGoodBro 会议纪要</DialogTitle>
           <DialogDescription className="text-base pt-2">
-            Do you have data from a previous Meetily installation?
+            是否需要导入旧版 Meetily 的会议？
           </DialogDescription>
         </DialogHeader>
 
@@ -135,7 +136,7 @@ export function LegacyDatabaseImport({ isOpen, onComplete }: LegacyDatabaseImpor
           {/* Browse Section */}
           <div className="space-y-3">
             <p className="text-sm text-gray-600">
-              Select your previous Meetily folder, backend directory, or database file:
+              选择旧版 Meetily 文件夹、backend 文件夹或数据库文件：
             </p>
 
             <button
@@ -146,12 +147,12 @@ export function LegacyDatabaseImport({ isOpen, onComplete }: LegacyDatabaseImpor
               {importState === 'selecting' || importState === 'detecting' ? (
                 <>
                   <Loader2 className="h-5 w-5 animate-spin" />
-                  <span>{importState === 'selecting' ? 'Selecting...' : 'Detecting database...'}</span>
+                  <span>{importState === 'selecting' ? "正在选择…" : "正在查找数据库…"}</span>
                 </>
               ) : (
                 <>
                   <FolderOpen className="h-5 w-5" />
-                  <span>Browse for Database</span>
+                  <span>选择数据库</span>
                 </>
               )}
             </button>
@@ -163,7 +164,7 @@ export function LegacyDatabaseImport({ isOpen, onComplete }: LegacyDatabaseImpor
               <div className="flex items-start gap-2">
                 <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-green-800">Database found!</p>
+                  <p className="text-sm font-medium text-green-800">已找到数据库</p>
                   <p className="text-xs text-green-700 mt-1 break-all">{detectedPath}</p>
                 </div>
               </div>
@@ -192,17 +193,17 @@ export function LegacyDatabaseImport({ isOpen, onComplete }: LegacyDatabaseImpor
               {importState === 'importing' ? (
                 <>
                   <Loader2 className="h-5 w-5 animate-spin" />
-                  <span>Importing...</span>
+                  <span>正在导入…</span>
                 </>
               ) : importState === 'success' ? (
                 <>
                   <CheckCircle2 className="h-5 w-5" />
-                  <span>Success!</span>
+                  <span>已完成</span>
                 </>
               ) : (
                 <>
                   <Database className="h-5 w-5" />
-                  <span>Import Database</span>
+                  <span>导入历史会议</span>
                 </>
               )}
             </button>
@@ -212,7 +213,7 @@ export function LegacyDatabaseImport({ isOpen, onComplete }: LegacyDatabaseImpor
                 <div className="w-full border-t border-gray-300"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">or</span>
+                <span className="px-2 bg-white text-gray-500">或</span>
               </div>
             </div>
 
@@ -221,7 +222,7 @@ export function LegacyDatabaseImport({ isOpen, onComplete }: LegacyDatabaseImpor
               disabled={isLoading}
               className="w-full px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
             >
-              Start Fresh (No Import)
+              开始使用，不导入
             </button>
           </div>
         </div>

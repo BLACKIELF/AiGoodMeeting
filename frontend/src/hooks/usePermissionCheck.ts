@@ -1,3 +1,4 @@
+import { toUserMessage } from '@/lib/user-message';
 import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 
@@ -53,7 +54,7 @@ export function usePermissionCheck() {
         hasMicrophone: false,
         hasSystemAudio: false,
         isChecking: false,
-        error: error instanceof Error ? error.message : 'Failed to check permissions',
+        error: toUserMessage(error, '无法检查录音权限，请重试。'),
       });
       return { hasMicrophone: false, hasSystemAudio: false };
     }

@@ -10,7 +10,8 @@ module.exports = {
   	extend: {
   		fontFamily: {
   			sans: [
-  				'var(--font-source-sans-3)'
+                '-apple-system', 'BlinkMacSystemFont', 'SF Pro Text', 'PingFang SC',
+                'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'sans-serif', 'Apple Color Emoji'
   			]
   		},
   		colors: {
@@ -27,7 +28,10 @@ module.exports = {
   				DEFAULT: 'hsl(var(--secondary))',
   				foreground: 'hsl(var(--secondary-foreground))'
   			},
-  			tertiary: '#64748b',
+            tertiary: 'hsl(var(--muted-foreground) / <alpha-value>)',
+            gray: Object.fromEntries([50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950].map(step => [step, `hsl(var(--agb-neutral-${step}) / <alpha-value>)`])),
+            slate: Object.fromEntries([50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950].map(step => [step, `hsl(var(--agb-neutral-${step}) / <alpha-value>)`])),
+            blue: Object.fromEntries([50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950].map(step => [step, `hsl(var(--agb-blue-${step}) / <alpha-value>)`])),
   			card: {
   				DEFAULT: 'hsl(var(--card))',
   				foreground: 'hsl(var(--card-foreground))'

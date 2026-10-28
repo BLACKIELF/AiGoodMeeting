@@ -10,6 +10,7 @@ import { LoaderIcon } from "lucide-react";
 import { useConfig } from "@/contexts/ConfigContext";
 import { usePaginatedTranscripts } from "@/hooks/usePaginatedTranscripts";
 import { parseSummaryContent } from "@/lib/summary-content";
+import { toUserMessage } from '@/lib/user-message';
 
 interface MeetingDetailsResponse {
   id: string;
@@ -147,7 +148,7 @@ function MeetingDetailsContent() {
   useEffect(() => {
     if (transcriptError) {
       console.error('Error loading transcripts:', transcriptError);
-      setError(transcriptError);
+      setError(toUserMessage(transcriptError, '会议内容读取失败，请重新打开这场会议。'));
     }
   }, [transcriptError]);
 
@@ -179,7 +180,7 @@ function MeetingDetailsContent() {
 
     if (!meetingId || meetingId === 'intro-call') {
       console.warn('No valid meeting ID in URL - meetingId:', meetingId);
-      setError("No meeting selected");
+      setError("请先选择一场会议");
       setIsLoading(false);
       Analytics.trackPageView('meeting_details');
       return;
@@ -249,14 +250,14 @@ function MeetingDetailsContent() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="agb-page flex h-dvh items-center justify-center bg-background p-6 text-foreground">
         <div className="text-center">
-          <p className="text-red-500 mb-4">{error}</p>
+          <p className="text-destructive mb-4">{error}</p>
           <button
             onClick={() => router.push('/')}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90"
           >
-            Go Back
+            返回会议列表
           </button>
         </div>
       </div>
@@ -265,8 +266,8 @@ function MeetingDetailsContent() {
 
   // Show loading spinner while initial data loads
   if (isLoading || !meetingDetails || meetingDetails.id !== meetingId) {
-    return <div className="flex items-center justify-center h-screen">
-      <LoaderIcon className="animate-spin size-6 " />
+    return <div className="agb-page flex h-dvh items-center justify-center bg-background p-6 text-foreground">
+      <LoaderIcon className="size-5 animate-spin text-primary" />
     </div>;
   }
 
@@ -297,8 +298,8 @@ function MeetingDetailsContent() {
 export default function MeetingDetails() {
   return (
     <Suspense fallback={
-      <div className="flex items-center justify-center h-screen">
-        <LoaderIcon className="animate-spin size-6" />
+      <div className="agb-page flex h-dvh items-center justify-center bg-background p-6 text-foreground">
+        <LoaderIcon className="size-5 animate-spin text-primary" />
       </div>
     }>
       <MeetingDetailsContent />

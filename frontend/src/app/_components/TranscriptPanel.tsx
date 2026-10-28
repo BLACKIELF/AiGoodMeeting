@@ -2,7 +2,7 @@ import { VirtualizedTranscriptView } from '@/components/VirtualizedTranscriptVie
 import { PermissionWarning } from '@/components/PermissionWarning';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
-import { Copy, GlobeIcon } from 'lucide-react';
+import { Copy, GlobeIcon, Mic } from 'lucide-react';
 import { useTranscripts } from '@/contexts/TranscriptContext';
 import { useConfig } from '@/contexts/ConfigContext';
 import { useRecordingState } from '@/contexts/RecordingStateContext';
@@ -31,7 +31,7 @@ export function TranscriptPanel({
   showModal
 }: TranscriptPanelProps) {
   // Contexts
-  const { transcripts, transcriptContainerRef, copyTranscript } = useTranscripts();
+  const { transcripts, transcriptContainerRef, copyTranscript, meetingTitle } = useTranscripts();
   const { transcriptModelConfig } = useConfig();
   const { isRecording, isPaused } = useRecordingState();
   const { checkPermissions, isChecking, hasSystemAudio, hasMicrophone } = usePermissionCheck();
@@ -50,23 +50,37 @@ export function TranscriptPanel({
   );
 
   return (
-    <div ref={transcriptContainerRef} className="w-full border-r border-gray-200 bg-white flex flex-col overflow-y-auto">
+    <div ref={transcriptContainerRef} className="agb-panel flex min-h-0 w-full flex-col overflow-y-auto bg-background text-foreground">
       {/* Title area - Sticky header */}
-      <div className="sticky top-0 z-10 bg-white p-4 border-gray-200">
-        <div className="flex flex-col space-y-3">
-          <div className="flex  flex-col space-y-2">
-            <div className="flex justify-center  items-center space-x-2">
+      <div className="agb-header sticky top-0 z-10 flex min-h-[88px] flex-wrap items-center justify-between gap-3 border-b border-border bg-background/95 px-5 py-4 backdrop-blur-xl sm:px-8">
+        <div className="min-w-0 flex-1">
+          <p className="agb-kicker mb-1 flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+            <Mic className="h-3 w-3" />录音工作台
+          </p>
+          <h1 className="truncate text-lg font-semibold tracking-tight">
+            {!meetingTitle || meetingTitle === '+ New Call' ? '新建会议' : meetingTitle}
+          </h1>
+        </div>
+        <div className="agb-toolbar flex flex-wrap items-center gap-2">
+          {isRecording && (
+            <span className="agb-chip flex items-center gap-1.5 rounded-full border border-border bg-muted px-2.5 py-1 text-[11px] text-muted-foreground">
+              <span className={`h-1.5 w-1.5 rounded-full ${isPaused ? 'bg-amber-500' : 'bg-red-500'}`} />
+              {isPaused ? '录音已暂停' : '正在录音'}
+            </span>
+          )}
+          {transcripts.length > 0 && <span className="text-[11px] tabular-nums text-muted-foreground">{transcripts.length} 段转写</span>}
               <ButtonGroup>
                 {transcripts?.length > 0 && (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={copyTranscript}
-                    title="Copy Transcript"
+                    title="复制转写"
+                    aria-label="复制转写"
                   >
                     <Copy />
                     <span className='hidden md:inline'>
-                      Copy
+                      复制
                     </span>
                   </Button>
                 )}
@@ -75,17 +89,16 @@ export function TranscriptPanel({
                     variant="outline"
                     size="sm"
                     onClick={() => showModal('languageSettings')}
-                    title="Language"
+                    title="转写语言"
+                    aria-label="转写语言"
                   >
                     <GlobeIcon />
                     <span className='hidden md:inline'>
-                      Language
+                      语言
                     </span>
                   </Button>
                 }
               </ButtonGroup>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -102,9 +115,9 @@ export function TranscriptPanel({
       )}
 
       {/* Transcript content */}
-      <div className="pb-20">
+      <div className="flex-1 pb-28 pt-6">
         <div className="flex justify-center">
-          <div className="w-2/3 max-w-[750px]">
+          <div className="w-full max-w-[850px] px-5 sm:px-8">
             <VirtualizedTranscriptView
               segments={segments}
               isRecording={isRecording}

@@ -7,7 +7,13 @@
 
 import { check, Update } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
-import { getVersion } from '@tauri-apps/api/app';
+import { getVersion, getIdentifier } from '@tauri-apps/api/app';
+
+/** Custom builds must never install an upstream binary over local features. */
+export async function checkForAllowedUpdate(): Promise<Update | null> {
+  if (await getIdentifier() === 'com.meetily.local-speakers') return null;
+  return check();
+}
 
 export interface UpdateInfo {
   available: boolean;
@@ -61,7 +67,7 @@ export class UpdateService {
 
     try {
       const currentVersion = await getVersion();
-      const update = await check();
+      const update = await checkForAllowedUpdate();
 
       if (update?.available) {
         return {
@@ -96,6 +102,9 @@ export class UpdateService {
     onProgress?: (progress: UpdateProgress) => void
   ): Promise<void> {
     try {
+      if (await getIdentifier() === 'com.meetily.local-speakers') {
+        throw new Error('此定制版请从 AiGoodMeeting 仓库下载新版安装。');
+      }
       // Download the update
       await update.download();
 

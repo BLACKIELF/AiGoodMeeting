@@ -5,9 +5,12 @@ import dynamic from 'next/dynamic';
 import { Summary, SummaryDataResponse, SummaryFormat, BlockNoteBlock } from '@/types';
 import { AISummary } from './index';
 import { Block } from '@blocknote/core';
+import { zh } from '@blocknote/core/locales';
 import { useCreateBlockNote } from '@blocknote/react';
 import { BlockNoteView } from '@blocknote/shadcn';
 import { blocksToMarkdownSafely } from '@/lib/blocknote-markdown';
+import { useAppearance } from '@/contexts/AppearanceContext';
+import { toUserMessage } from '@/lib/user-message';
 import "@blocknote/shadcn/style.css";
 
 // Dynamically import BlockNote Editor to avoid SSR issues
@@ -75,21 +78,28 @@ export const BlockNoteSummaryView = forwardRef<BlockNoteSummaryViewRef, BlockNot
   meeting,
   onDirtyChange
 }, ref) => {
+  const { resolvedAppearance } = useAppearance();
   const { format, data } = detectSummaryFormat(summaryData);
   const [isDirty, setIsDirty] = useState(false);
   const [currentBlocks, setCurrentBlocks] = useState<Block[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [editorError, setEditorError] = useState<string | null>(null);
   const isContentLoaded = useRef(false);
 
   // Create BlockNote editor for markdown parsing
   const editor = useCreateBlockNote({
-    initialContent: undefined
+    initialContent: undefined,
+    dictionary: { ...zh, file_panel: { ...zh.file_panel, upload: {
+      ...zh.file_panel.upload, upload_error: '上传失败，请重试。',
+    } } },
   });
 
   // Parse markdown to blocks when format is markdown
   useEffect(() => {
+    let cancelled = false;
     if (format === 'markdown' && data?.markdown && editor) {
       const loadMarkdown = async () => {
+        setEditorError(null);
         try {
           console.log('📝 Parsing markdown to BlockNote blocks...');
           const blocks = await editor.tryParseMarkdownToBlocks(data.markdown);
@@ -102,10 +112,12 @@ export const BlockNoteSummaryView = forwardRef<BlockNoteSummaryViewRef, BlockNot
           }, 100);
         } catch (err) {
           console.error('❌ Failed to parse markdown:', err);
+          if (!cancelled) setEditorError(toUserMessage(err, '纪要暂时无法显示，请重新打开这场会议。'));
         }
       };
       loadMarkdown();
     }
+    return () => { cancelled = true; };
   }, [format, data?.markdown, editor]);
 
   // Set content loaded flag for blocknote format
@@ -256,6 +268,7 @@ export const BlockNoteSummaryView = forwardRef<BlockNoteSummaryViewRef, BlockNot
     console.log('🎨 Rendering MARKDOWN format (parsed to BlockNote)');
     return (
       <div className="flex flex-col w-full">
+        {editorError && <p role="alert" className="mb-3 rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">{editorError}</p>}
         <div className="w-full">
           <BlockNoteView
             editor={editor}
@@ -265,7 +278,7 @@ export const BlockNoteSummaryView = forwardRef<BlockNoteSummaryViewRef, BlockNot
                 handleEditorChange(editor.document);
               }
             }}
-            theme="light"
+            theme={resolvedAppearance}
           />
         </div>
       </div>

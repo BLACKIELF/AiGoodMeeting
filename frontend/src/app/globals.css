@@ -78,58 +78,72 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    color-scheme: light;
+    --background: 220 16% 96%;
+    --foreground: 220 11% 16%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --radius: 0.5rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --card-foreground: var(--foreground);
+    --popover: var(--card);
+    --popover-foreground: var(--foreground);
+    --primary: 222 93% 56%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 216 15% 94%;
+    --secondary-foreground: var(--foreground);
+    --muted: var(--secondary);
+    --muted-foreground: 216 10% 41%;
+    --accent: 222 80% 96%;
+    --accent-foreground: var(--primary);
+    --destructive: 353 67% 43%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 217 24% 87%;
+    --input: 217 14% 58%;
+    --ring: var(--primary);
+    --radius: 0.65rem;
+    --agb-sidebar: 216 15% 94%;
+    --agb-panel: 210 25% 98%;
+    --agb-subtle: 215 11% 43%;
+    --agb-primary-hover: 222 92% 49%;
+    --agb-source-primary: var(--primary);
+    --agb-secondary-accent: 252 100% 71%;
+    --agb-tint: 222 93% 56%;
+    --agb-tint-opacity: 0.025;
+    --agb-material-opacity: 0.88;
+    --agb-shadow: 0 8px 28px #26334A08, 0 1px 2px #26334A05;
+    --agb-panel-shadow: 0 1px 0 #FFFFFFB3 inset;
+    --agb-success: 146 50% 28%;
+    --agb-warning: 38 81% 28%;
+    --chart-1: var(--primary);
+    --chart-2: var(--agb-secondary-accent);
+    --chart-3: 290 50% 70%;
+    --chart-4: var(--agb-success);
+    --chart-5: var(--agb-warning);
   }
 
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+  :root.dark {
+    color-scheme: dark;
+    --background: 220 9% 14%;
+    --foreground: 220 13% 95%;
+    --card: 220 9% 19%;
+    --card-foreground: var(--foreground);
+    --popover: var(--card);
+    --popover-foreground: var(--foreground);
+    --primary: 223 100% 74%;
+    --primary-foreground: 218 14% 11%;
+    --secondary: 220 8% 17%;
+    --secondary-foreground: var(--foreground);
+    --muted: var(--secondary);
+    --muted-foreground: 216 13% 73%;
+    --accent: 222 20% 25%;
+    --accent-foreground: var(--primary);
+    --destructive: 355 78% 75%;
+    --destructive-foreground: 340 28% 11%;
+    --border: 218 11% 30%;
+    --input: 215 12% 53%;
+    --ring: var(--primary);
+    --agb-sidebar: 220 8% 17%;
+    --agb-panel: 217 10% 17%;
+    --agb-subtle: 217 14% 66%;
+    --agb-material-opacity: 0.91;
   }
 }
 
@@ -138,11 +152,20 @@
     @apply border-border;
   }
 
-  /* html, */
+  html { height: 100%; }
+
   body {
     @apply bg-background text-foreground;
     overflow: hidden;
     height: 100%;
+    font-feature-settings: "ss01";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.2);
+    color: hsl(var(--foreground));
   }
 
   /* Make the window draggable */
@@ -166,18 +189,18 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #d1d5db;
+    background: hsl(var(--input) / 0.65);
     border-radius: 3px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #9ca3af;
+    background: hsl(var(--muted-foreground) / 0.8);
   }
 
   /* Firefox scrollbar */
   .custom-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: #d1d5db transparent;
+    scrollbar-color: hsl(var(--input) / 0.65) transparent;
   }
 
   /* BlockNote Editor - Override fixed dimensions for responsive layout */
@@ -211,4 +234,321 @@
   [data-node-type] {
     overflow: visible !important;
   }
+}
+
+@layer components {
+  :root .agb-shell {
+    width: 100%;
+    height: 100dvh;
+    isolation: isolate;
+    position: relative;
+    background: transparent;
+    color: hsl(var(--foreground));
+  }
+
+  :root .agb-sidebar {
+    background: transparent;
+    color: hsl(var(--foreground));
+    border-color: hsl(var(--border));
+    box-shadow: 1px 0 0 hsl(var(--foreground) / 0.025);
+  }
+
+  :root .agb-main {
+    min-width: 0;
+    background: transparent;
+    color: hsl(var(--foreground));
+  }
+
+  :root .agb-page { color: hsl(var(--foreground)); background: var(--agb-glass-content-backing); }
+
+  :root .agb-header {
+    background: transparent;
+    color: hsl(var(--foreground));
+    border-color: hsl(var(--border));
+
+  }
+
+  :root .agb-panel {
+    background: transparent;
+    color: hsl(var(--foreground));
+    border: 1px solid hsl(var(--border));
+    border-radius: 12px;
+    box-shadow: var(--agb-glass-shadow);
+  }
+
+  :root .agb-card {
+    background: transparent;
+    color: hsl(var(--card-foreground));
+    border: 1px solid hsl(var(--border));
+    border-radius: 10px;
+    box-shadow: var(--agb-glass-shadow);
+  }
+
+  :root .agb-toolbar {
+    background: transparent;
+    color: hsl(var(--foreground));
+    border-color: hsl(var(--border));
+
+  }
+
+  .agb-kicker {
+    color: hsl(var(--muted-foreground));
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.45;
+    letter-spacing: 0.04em;
+  }
+
+  .agb-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border: 1px solid hsl(var(--border));
+    border-radius: 6px;
+    padding: 3px 7px;
+    background: transparent;
+    color: hsl(var(--muted-foreground));
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
+  .agb-theme-switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 30px;
+    padding: 6px 9px;
+    border: 1px solid hsl(var(--border));
+    border-radius: 7px;
+    background: hsl(var(--card) / 0.56);
+    color: hsl(var(--muted-foreground));
+    font-size: 12px;
+    transition: background-color 120ms ease, color 120ms ease;
+  }
+
+  .agb-theme-switcher.is-compact { width: 30px; justify-content: center; padding: 5px; gap: 0; }
+  .agb-theme-switcher:hover,
+  .agb-theme-switcher[data-state="open"] { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+  .agb-theme-switcher:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+
+  .agb-appearance-control {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 3px;
+    max-width: 420px;
+    padding: 4px;
+    border: 1px solid hsl(var(--border));
+    border-radius: 9px;
+    background: hsl(var(--muted));
+  }
+
+  .agb-appearance-option {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 7px;
+    min-height: 34px;
+    padding: 7px 10px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: hsl(var(--muted-foreground));
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .agb-appearance-option[data-selected="true"] {
+    border-color: hsl(var(--border));
+    background: hsl(var(--card));
+    color: hsl(var(--foreground));
+    box-shadow: 0 1px 3px hsl(var(--foreground) / 0.06);
+  }
+  .agb-appearance-option:has(input:focus-visible) { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+
+
+
+}
+
+/* Portaled components inherit root tokens; BlockNote declares local light-mode
+   tokens, so bind only its neutral roles to the same semantic aliases. */
+:root .bn-container,
+:root .bn-shadcn,
+:root .bn-shadcn.dark {
+  --background: var(--agb-background) !important;
+  --foreground: var(--agb-foreground) !important;
+  --card: var(--agb-card) !important;
+  --card-foreground: var(--agb-card-foreground) !important;
+  --popover: var(--agb-popover) !important;
+  --popover-foreground: var(--agb-popover-foreground) !important;
+  --primary: var(--agb-primary) !important;
+  --primary-foreground: var(--agb-primary-foreground) !important;
+  --secondary: var(--agb-secondary) !important;
+  --secondary-foreground: var(--agb-secondary-foreground) !important;
+  --muted: var(--agb-muted) !important;
+  --muted-foreground: var(--agb-muted-foreground) !important;
+  --accent: var(--agb-accent) !important;
+  --accent-foreground: var(--agb-accent-foreground) !important;
+  --border: var(--agb-border) !important;
+  --input: var(--agb-input) !important;
+  --ring: var(--agb-ring) !important;
+  --destructive: var(--agb-destructive) !important;
+  --destructive-foreground: var(--agb-destructive-foreground) !important;
+  --bn-colors-editor-text: hsl(var(--agb-foreground)) !important;
+  --bn-colors-editor-background: hsl(var(--agb-card)) !important;
+  --bn-colors-menu-text: hsl(var(--agb-foreground)) !important;
+  --bn-colors-menu-background: hsl(var(--agb-card)) !important;
+  --bn-colors-hovered-text: hsl(var(--agb-accent-foreground)) !important;
+  --bn-colors-hovered-background: hsl(var(--agb-accent)) !important;
+  --bn-colors-selected-text: hsl(var(--agb-primary-foreground)) !important;
+  --bn-colors-selected-background: hsl(var(--agb-primary)) !important;
+  --bn-colors-disabled-text: hsl(var(--agb-muted-foreground)) !important;
+  --bn-colors-disabled-background: hsl(var(--agb-muted)) !important;
+  --bn-colors-border: hsl(var(--agb-border)) !important;
+  --bn-colors-side-menu: hsl(var(--agb-muted-foreground)) !important;
+}
+:root .bn-editor { background: hsl(var(--agb-card)) !important; color: hsl(var(--agb-foreground)) !important; font-family: inherit; }
+:root .bn-editor a { color: hsl(var(--agb-primary)); }
+
+html:root [data-sonner-toaster][data-sonner-theme] {
+  --normal-bg: hsl(var(--card));
+  --normal-text: hsl(var(--foreground));
+  --normal-border: hsl(var(--border));
+  --success-bg: hsl(var(--card));
+  --success-text: hsl(var(--agb-success));
+  --success-border: hsl(var(--agb-success) / 0.4);
+  --error-bg: hsl(var(--card));
+  --error-text: hsl(var(--destructive));
+  --error-border: hsl(var(--destructive) / 0.4);
+  --warning-bg: hsl(var(--card));
+  --warning-text: hsl(var(--agb-warning));
+  --warning-border: hsl(var(--agb-warning) / 0.4);
+  --info-bg: hsl(var(--card));
+  --info-text: hsl(var(--primary));
+  --info-border: hsl(var(--primary) / 0.4);
+  font-family: inherit;
+}
+html:root [data-sonner-toast][data-styled="true"] { box-shadow: var(--agb-shadow); border-radius: 10px; }
+html:root [data-sonner-toaster] [data-sonner-toast] [data-description] { color: hsl(var(--muted-foreground)); }
+
+/* Legacy neutral/blue utilities still exist in secondary screens. Tailwind's
+   neutral scales are mapped to roles; true white-on-color labels stay white. */
+html.dark .bg-white { background-color: hsl(var(--card)); }
+html.dark .bg-white\/90 { background-color: hsl(var(--card) / 0.9); }
+html.dark .bg-white\/80 { background-color: hsl(var(--card) / 0.8); }
+html.dark .bg-white\/50 { background-color: hsl(var(--card) / 0.5); }
+html.dark .bg-white\/30 { background-color: hsl(var(--card) / 0.3); }
+html.dark .hover\:bg-white:hover { background-color: hsl(var(--card)); }
+:root .bg-blue-400.text-white,
+:root .bg-blue-500.text-white,
+:root .bg-blue-600.text-white,
+:root .bg-blue-700.text-white,
+:root .bg-primary.text-white { color: hsl(var(--primary-foreground)); }
+
+/* WorkspaceGlass.swift: one shared backdrop, source surface overlays and edge.
+   The source AppKit HUD pass is represented by a single WebKit content filter;
+   this does not expose the desktop or other windows through the app. */
+:root .agb-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: hsl(var(--background));
+  background-image: var(--agb-workspace-backdrop);
+  backdrop-filter: var(--agb-glass-material-filter);
+  -webkit-backdrop-filter: var(--agb-glass-material-filter);
+}
+
+:root :is(.agb-sidebar, .agb-header, .agb-panel, .agb-card, .agb-toolbar, .agb-chip),
+:root .agb-page :is(div, section, article).bg-card.border {
+  background-color: transparent;
+  background-image: var(--agb-glass-semantic-backing), var(--agb-glass-surface);
+  background-origin: border-box;
+  background-clip: padding-box;
+  border-color: transparent;
+  box-shadow: var(--agb-glass-shadow);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+:root :is(.agb-header, .agb-panel, .agb-card, .agb-toolbar, .agb-chip):not(.sticky):not(.fixed):not(.absolute),
+:root .agb-page :is(div, section, article).bg-card.border:not(.sticky):not(.fixed):not(.absolute) { position: relative; }
+
+:root :is(.agb-sidebar, .agb-header, .agb-panel, .agb-card, .agb-toolbar, .agb-chip)::before,
+:root .agb-page :is(div, section, article).bg-card.border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  border-radius: inherit;
+  padding: var(--agb-glass-line-width);
+  background: var(--agb-glass-edge);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+/* Outer wrappers/neutral editor shells must not conceal the material with a
+   second opaque bg-card/bg-background layer. Portaled controls remain opaque. */
+:root .agb-main,
+:root .agb-panel > :is(div, section).bg-card,
+:root .agb-panel :is(div, section).bg-card.flex-col:not(.agb-card),
+:root .agb-panel .bn-editor {
+  background-color: transparent !important;
+}
+:root .agb-panel .bn-container {
+  --bn-colors-editor-background: transparent !important;
+}
+
+:root .text-primary,
+:root :is(.text-blue-400, .text-blue-500, .text-blue-600, .text-blue-700, .text-blue-800, .text-blue-900, .text-blue-950) {
+  color: hsl(var(--agb-control-foreground));
+}
+:root :is(.agb-sidebar, .agb-main) [aria-current="page"],
+:root :is(.agb-card, .agb-panel)[data-selected="true"] {
+  background-color: transparent;
+  background-image: linear-gradient(var(--agb-selected-fill), var(--agb-selected-fill)), var(--agb-glass-semantic-backing), var(--agb-glass-surface);
+  color: hsl(var(--agb-control-foreground));
+  box-shadow: inset 0 0 0 var(--agb-glass-selected-line-width) var(--agb-selected-stroke), var(--agb-glass-shadow);
+}
+
+/* progress.linear original tileX, 240x32, host owns the rounded mask.
+   These are existing active ImportAudio/Retranscribe/model-download fills;
+   pulsing recording dots have none of these height/width contracts. */
+:root[data-palette="blue-white-porcelain"] :is(
+  .h-3.rounded-full.bg-primary.transition-all[style*="width"],
+  .h-2.rounded-full.bg-blue-600.transition-all[style*="width"],
+  .h-2.rounded-full.overflow-hidden > .h-full.bg-gradient-to-r[style*="width"]
+) {
+  background-image: var(--agb-progress-texture);
+  background-repeat: repeat-x;
+  background-size: auto 100%;
+  background-position: left center;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  :root .agb-shell::before { background-image: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+  :root .agb-page { background: hsl(var(--background)); }
+  :root :is(.agb-sidebar, .agb-header, .agb-panel, .agb-card, .agb-toolbar, .agb-chip),
+  :root .agb-page :is(div, section, article).bg-card.border {
+    background: hsl(var(--card));
+    border-color: hsl(var(--input));
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  :root :is(.agb-sidebar, .agb-header, .agb-panel, .agb-card, .agb-toolbar, .agb-chip)::before,
+  :root .agb-page :is(div, section, article).bg-card.border::before { display: none; }
+  :root :is(.agb-sidebar, .agb-main) [aria-current="page"],
+  :root :is(.agb-card, .agb-panel)[data-selected="true"] {
+    background: hsl(var(--accent));
+    box-shadow: inset 0 0 0 1px hsl(var(--ring));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }

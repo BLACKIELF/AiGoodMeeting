@@ -1,3 +1,4 @@
+import { toUserMessage } from '@/lib/user-message';
 import { useState, useEffect, useCallback } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { toast } from 'sonner';
@@ -143,7 +144,7 @@ export function useModalState(transcriptModelConfig?: TranscriptModelProps): Use
           } else {
             // Show toast instead of modal for non-actionable errors (consistent with sidebar)
             toast.error('', {
-              description: userMessage,
+              description: toUserMessage(userMessage, '转写遇到问题，请检查模型和录音设备。'),
               duration: 5000,
             });
           }
@@ -176,7 +177,7 @@ export function useModalState(transcriptModelConfig?: TranscriptModelProps): Use
 
         // Auto-close modal if the downloaded model matches the selected one
         if (transcriptModelConfig?.provider === 'localWhisper' && transcriptModelConfig?.model === modelName) {
-          toast.success('Model ready! Closing window...', { duration: 1500 });
+          toast.success('模型已就绪，即将关闭窗口…', { duration: 1500 });
           setTimeout(() => hideModal('modelSelector'), 1500);
         }
       });

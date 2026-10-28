@@ -1,3 +1,4 @@
+import { toUserMessage } from '@/lib/user-message';
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { ChunkStatus, ProcessingProgress } from '../components/ChunkProgressDisplay';
 
@@ -111,7 +112,7 @@ export function useProcessingProgress() {
           ? {
               ...chunk,
               status: 'failed',
-              error_message: errorMessage,
+              error_message: toUserMessage(errorMessage, '此片段处理失败，请重试。'),
               end_time: Date.now()
             }
           : chunk

@@ -108,7 +108,7 @@ static TRANSCRIPT_LISTENER_ID: Mutex<Option<tauri::EventId>> = Mutex::new(None);
 
 const TRANSCRIPTION_RUNTIME_START_ERROR_CODE: &str =
     "TRANSCRIPTION_RUNTIME_INITIALIZATION_FAILED";
-const TRANSCRIPTION_RUNTIME_USER_MESSAGE: &str = "Speech recognition could not initialize. Restart Meetily. If the problem continues, repair or reinstall the app.";
+const TRANSCRIPTION_RUNTIME_USER_MESSAGE: &str = "转写引擎未能启动，请重启 AiGoodMeeting；如果仍有问题，请检查模型或重新安装应用。";
 
 // ============================================================================
 // PUBLIC TYPES
@@ -388,7 +388,7 @@ pub async fn start_recording_with_meeting_name<R: Runtime>(
         // Example: Meeting 2025-10-03_08-25-23
         let now = chrono::Local::now();
         format!(
-            "Meeting {}",
+            "会议 {}",
             now.format("%Y-%m-%d_%H-%M-%S")
         )
     });
@@ -575,7 +575,7 @@ pub async fn start_recording_with_devices_and_meeting<R: Runtime>(
     let effective_meeting_name = meeting_name.clone().unwrap_or_else(|| {
         let now = chrono::Local::now();
         format!(
-            "Meeting {}",
+            "会议 {}",
             now.format("%Y-%m-%d_%H-%M-%S")
         )
     });

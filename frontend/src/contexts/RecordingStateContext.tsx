@@ -1,5 +1,6 @@
 'use client';
 
+import { toUserMessage } from '@/lib/user-message';
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { recordingService } from '@/services/recordingService';
 import { toast } from 'sonner';
@@ -49,6 +50,16 @@ interface RecordingStateContextType extends RecordingState {
 }
 
 const RecordingStateContext = createContext<RecordingStateContextType | null>(null);
+const STATUS_MESSAGES: Record<RecordingStatus, string> = {
+  [RecordingStatus.IDLE]: '等待录音',
+  [RecordingStatus.STARTING]: '正在准备录音…',
+  [RecordingStatus.RECORDING]: '正在录音',
+  [RecordingStatus.STOPPING]: '正在停止录音…',
+  [RecordingStatus.PROCESSING_TRANSCRIPTS]: '正在整理转写内容…',
+  [RecordingStatus.SAVING]: '正在保存会议…',
+  [RecordingStatus.COMPLETED]: '录音已保存',
+  [RecordingStatus.ERROR]: '录音操作未完成，请重试。',
+};
 
 export const useRecordingState = () => {
   const context = useContext(RecordingStateContext);
@@ -78,7 +89,7 @@ export function RecordingStateProvider({ children }: { children: React.ReactNode
     setState(prev => ({
       ...prev,
       status,
-      statusMessage: message,
+      statusMessage: message ? toUserMessage(message, STATUS_MESSAGES[status]) : undefined,
     }));
   }, [state.status, state.isRecording, state.isPaused]);
 
@@ -157,7 +168,7 @@ export function RecordingStateProvider({ children }: { children: React.ReactNode
           console.log('[RecordingStateContext] Recording starting event');
           setState(prev => prev.status === RecordingStatus.RECORDING
             ? prev
-            : { ...prev, status: RecordingStatus.STARTING, statusMessage: 'Starting recording...' });
+            : { ...prev, status: RecordingStatus.STARTING, statusMessage: '正在开始录音…' });
         });
         unsubscribers.push(unlistenStarting);
 
@@ -178,7 +189,7 @@ export function RecordingStateProvider({ children }: { children: React.ReactNode
             return {
               ...prev,
               status: newStatus,
-              statusMessage: newStatus === RecordingStatus.STOPPING ? 'Stopping recording...' : prev.statusMessage,
+              statusMessage: newStatus === RecordingStatus.STOPPING ? '正在停止录音…' : prev.statusMessage,
               isRecording: false,
               isPaused: false,
               isActive: false,
@@ -265,7 +276,7 @@ export function RecordingStateProvider({ children }: { children: React.ReactNode
           // selected mic that wasn't available at start (backend fell back to
           // the default). Copy is worded to be accurate for both.
           toast.info(
-            `Microphone switched to ${device_name} for this meeting.`,
+            `本次会议已切换至麦克风“${device_name}”。`,
             { duration: 6000 }
           );
         });
@@ -279,8 +290,8 @@ export function RecordingStateProvider({ children }: { children: React.ReactNode
           // available" — expected, not an error worth a toast.
           if (isRecordingRef.current) {
             toast.error(
-              `Microphone fallback failed for ${device_name}: ${error}`,
-              { duration: 8000 }
+              `无法切换到麦克风“${device_name}”。`,
+              { description: toUserMessage(error, '请检查设备连接和系统权限后重试。'), duration: 8000 }
             );
           }
         });
@@ -292,7 +303,7 @@ export function RecordingStateProvider({ children }: { children: React.ReactNode
           // Fires at recording start, before isRecording flips true, so this
           // is intentionally NOT gated by isRecordingRef.
           toast.error(
-            'No microphone available — recording system audio only.',
+            '麦克风不可用，本次仅录制系统音频。',
             { duration: 8000 }
           );
         });
@@ -305,7 +316,7 @@ export function RecordingStateProvider({ children }: { children: React.ReactNode
           // mic-swap-failed so a stale event after Stop doesn't alarm the user.
           if (isRecordingRef.current) {
             toast.error(
-              `Microphone '${device_name}' could not be recovered — recording continues without a microphone. Stop and restart to fix.`,
+              `无法恢复麦克风“${device_name}”，录音将继续，但不会录入麦克风声音。请停止后重新开始录音。`,
               { duration: 10000 }
             );
           }

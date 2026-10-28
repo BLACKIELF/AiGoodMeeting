@@ -1,3 +1,4 @@
+import { toUserMessage } from '@/lib/user-message';
 import {useEffect, useState} from 'react';
 
 interface MessageToastProps {
@@ -19,7 +20,7 @@ export function MessageToast({ message, type, show, setShow }: MessageToastProps
     
     return (
         show && (
-            <span className={`${type === 'success' ? 'text-green-500' : 'text-red-500'}`}>{message}</span>
+            <span className={`${type === 'success' ? 'text-green-500' : 'text-red-500'}`}>{toUserMessage(message, type === 'success' ? '操作已完成。' : '操作未完成，请重试。')}</span>
         )
     );
 }

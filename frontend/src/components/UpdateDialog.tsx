@@ -1,3 +1,4 @@
+import { toUserMessage } from '@/lib/user-message';
 import React, { useState, useEffect } from 'react';
 import { Download, X, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import {
@@ -9,8 +10,9 @@ import {
   DialogTitle,
 } from './ui/dialog';
 import { Button } from './ui/button';
-import { updateService, UpdateInfo, UpdateProgress } from '@/services/updateService';
-import { check, Update } from '@tauri-apps/plugin-updater';
+import { updateService, UpdateInfo, UpdateProgress, checkForAllowedUpdate } from '@/services/updateService';
+import { Update } from '@tauri-apps/plugin-updater';
+import { getIdentifier } from '@tauri-apps/api/app';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { toast } from 'sonner';
 
@@ -34,15 +36,15 @@ export function UpdateDialog({ open, onOpenChange, updateInfo }: UpdateDialogPro
       setError(null);
 
       // Get the update object when dialog opens
-      check().then((updateResult) => {
+      checkForAllowedUpdate().then((updateResult) => {
         if (updateResult?.available) {
           setUpdate(updateResult);
         } else {
-          setError('Update no longer available');
+          setError("该更新已不可用。");
         }
       }).catch((err) => {
         console.error('Failed to get update object:', err);
-        setError('Failed to prepare update: ' + (err.message || 'Unknown error'));
+        setError(toUserMessage(err, '暂时无法准备更新，请稍后重试。'));
       });
     } else {
       // Reset state when dialog closes
@@ -54,20 +56,24 @@ export function UpdateDialog({ open, onOpenChange, updateInfo }: UpdateDialogPro
   }, [open, updateInfo]);
 
   const handleDownloadAndInstall = async () => {
+    if (await getIdentifier() === 'com.meetily.local-speakers') {
+      setError('此定制版请从 AiGoodMeeting 仓库下载新版安装。');
+      return;
+    }
     // Get update object if not already available
     let updateToUse: Update | null = update;
     if (!updateToUse) {
       try {
-        const updateResult = await check();
+        const updateResult = await checkForAllowedUpdate();
         if (updateResult?.available) {
           updateToUse = updateResult;
           setUpdate(updateResult);
         } else {
-          setError('Update not available');
+          setError("当前没有可用更新。");
           return;
         }
       } catch (err: any) {
-        setError('Failed to get update: ' + (err.message || 'Unknown error'));
+        setError(toUserMessage(err, '暂时无法读取更新，请稍后重试。'));
         return;
       }
     }
@@ -123,7 +129,7 @@ export function UpdateDialog({ open, onOpenChange, updateInfo }: UpdateDialogPro
       });
 
       console.log('[UpdateDialog] Update installed successfully');
-      toast.success('Update installed successfully. The app will restart...');
+      toast.success("更新已安装，应用即将重启…");
 
       // Mark download as complete before closing
       setIsDownloading(false);
@@ -135,9 +141,9 @@ export function UpdateDialog({ open, onOpenChange, updateInfo }: UpdateDialogPro
       await relaunch();
     } catch (err: any) {
       console.error('Update failed:', err);
-      setError(err.message || 'Failed to download or install update');
+      setError(toUserMessage(err, '更新下载或安装失败，请重试。'));
       setIsDownloading(false);
-      toast.error('Update failed: ' + (err.message || 'Unknown error'));
+      toast.error(toUserMessage(err, '更新失败，请稍后重试。'));
     }
   };
 
@@ -190,26 +196,26 @@ export function UpdateDialog({ open, onOpenChange, updateInfo }: UpdateDialogPro
             {isDownloading ? (
               <>
                 <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
-                Downloading Update
+                正在下载更新
               </>
             ) : error ? (
               <>
                 <AlertCircle className="h-5 w-5 text-red-600" />
-                Update Error
+                更新失败
               </>
             ) : (
               <>
                 <Download className="h-5 w-5 text-blue-600" />
-                Update Available
+                发现新版本
               </>
             )}
           </DialogTitle>
           <DialogDescription>
             {isDownloading
-              ? 'Downloading the latest version...'
+              ? "正在下载新版本…"
               : error
-              ? 'An error occurred while updating'
-              : `A new version (${updateInfo.version}) is available`}
+              ? "更新未完成，请稍后重试。"
+              : `新版本 ${updateInfo.version} 已可下载`}
           </DialogDescription>
         </DialogHeader>
 
@@ -218,27 +224,28 @@ export function UpdateDialog({ open, onOpenChange, updateInfo }: UpdateDialogPro
             <>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Current Version:</span>
+                  <span className="text-muted-foreground">当前版本：</span>
                   <span className="font-medium">{updateInfo.currentVersion}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">New Version:</span>
+                  <span className="text-muted-foreground">新版本：</span>
                   <span className="font-medium text-blue-600">{updateInfo.version}</span>
                 </div>
                 {updateInfo.date && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Release Date:</span>
+                    <span className="text-muted-foreground">发布日期：</span>
                     <span className="font-medium">{formatDate(updateInfo.date)}</span>
                   </div>
                 )}
               </div>
 
               {updateInfo.body && (
-                <div className="bg-gray-50 rounded-lg p-3 max-h-40 overflow-y-auto">
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                <details className="max-h-40 overflow-y-auto rounded-lg bg-muted/50 p-3">
+                  <summary className="cursor-pointer text-sm font-medium">发布说明（上游原文）</summary>
+                  <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">
                     {updateInfo.body}
                   </p>
-                </div>
+                </details>
               )}
             </>
           )}
@@ -253,7 +260,7 @@ export function UpdateDialog({ open, onOpenChange, updateInfo }: UpdateDialogPro
                   />
                 </div>
                 <div className="flex justify-between text-xs text-gray-600 mt-1">
-                  <span>{Math.round(progress.percentage)}% complete</span>
+                  <span>{Math.round(progress.percentage)}% 已完成</span>
                   {progress.total > 0 && (
                     <span>
                       {formatBytes(progress.downloaded)} / {formatBytes(progress.total)}
@@ -262,7 +269,7 @@ export function UpdateDialog({ open, onOpenChange, updateInfo }: UpdateDialogPro
                 </div>
               </div>
               <p className="text-sm text-muted-foreground text-center">
-                The app will restart automatically after installation
+                安装后应用会自动重启。
               </p>
             </div>
           )}
@@ -278,17 +285,17 @@ export function UpdateDialog({ open, onOpenChange, updateInfo }: UpdateDialogPro
           {!isDownloading && !error && (
             <>
               <Button variant="outline" onClick={() => handleOpenChange(false)}>
-                Later
+                稍后
               </Button>
               <Button onClick={handleDownloadAndInstall} className="bg-blue-600 hover:bg-blue-700">
                 <Download className="h-4 w-4 mr-2" />
-                Download & Install
+                下载并安装
               </Button>
             </>
           )}
           {error && (
             <Button variant="outline" onClick={() => handleOpenChange(false)}>
-              Close
+              关闭
             </Button>
           )}
         </DialogFooter>
@@ -298,9 +305,9 @@ export function UpdateDialog({ open, onOpenChange, updateInfo }: UpdateDialogPro
 }
 
 function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) return '0 字节';
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const sizes = ['字节', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 }

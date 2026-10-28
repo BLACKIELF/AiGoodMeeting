@@ -1,3 +1,4 @@
+import { toUserMessage } from '@/lib/user-message';
 import { useState, useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 
@@ -35,7 +36,7 @@ export const useAudioPlayer = (audioPath: string | null) => {
       return true;
     } catch (error) {
       console.error('Error initializing AudioContext:', error);
-      setError('Failed to initialize audio');
+      setError(toUserMessage(error, '无法初始化音频播放，请重试。'));
       return false;
     }
   };
@@ -122,7 +123,7 @@ export const useAudioPlayer = (audioPath: string | null) => {
           stack: error.stack,
         });
       }
-      setError('Failed to load audio file');
+      setError(toUserMessage(error, '无法读取录音文件，请检查文件后重试。'));
     }
   };
 
@@ -232,7 +233,7 @@ export const useAudioPlayer = (audioPath: string | null) => {
       rafRef.current = requestAnimationFrame(updateTime);
     } catch (error) {
       console.error('Error during playback:', error);
-      setError('Failed to play audio');
+      setError(toUserMessage(error, '无法播放录音，请重试。'));
       stopPlayback();
     }
   };

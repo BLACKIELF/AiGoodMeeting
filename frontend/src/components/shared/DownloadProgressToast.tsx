@@ -1,5 +1,6 @@
 'use client';
 
+import { toUserMessage } from '@/lib/user-message';
 import React, { useEffect, useState, useCallback } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { toast } from 'sonner';
@@ -27,25 +28,24 @@ function categorizeError(error: string): string {
     lowerError.includes('connection') ||
     lowerError.includes('timeout') ||
     lowerError.includes('failed to start download')) {
-    return 'Network error - Check your internet connection';
+    return '网络连接异常，请检查网络后重试。';
   }
 
   if (lowerError.includes('status:') || lowerError.includes('http')) {
-    return 'Server error - Download temporarily unavailable';
+    return '下载服务暂不可用，请稍后重试。';
   }
 
   if (lowerError.includes('disk') ||
     lowerError.includes('write') ||
     lowerError.includes('file')) {
-    return 'Storage error - Check available disk space';
+    return '无法写入模型，请检查剩余磁盘空间。';
   }
 
   if (lowerError.includes('invalid') || lowerError.includes('validation')) {
-    return 'File validation failed - Please retry download';
+    return '文件校验失败，请重新下载。';
   }
 
-  // Fallback to original error
-  return error;
+  return toUserMessage(error, '模型下载失败，请重试。');
 }
 
 // Custom toast component for download progress
@@ -87,11 +87,11 @@ function DownloadToastContent({
         </div>
 
         {hasError ? (
-          <p className="text-xs text-red-600">{download.error || 'Download failed'}</p>
+          <p className="text-xs text-red-600">{toUserMessage(download.error, '下载失败，请重试。')}</p>
         ) : isComplete ? (
-          <p className="text-xs text-green-600">Download complete</p>
+          <p className="text-xs text-green-600">下载完成</p>
         ) : isCancelled ? (
-          <p className="text-xs text-gray-600">Download cancelled</p>
+          <p className="text-xs text-gray-600">下载已取消</p>
         ) : (
           <>
             {/* Progress bar */}
@@ -228,7 +228,7 @@ export function useDownloadProgressToast() {
         const { modelName, progress, downloaded_mb, total_mb, speed_mbps, status } = event.payload;
         const downloadData: DownloadProgress = {
           modelName,
-          displayName: 'Transcription Model (Parakeet)',
+          displayName: '转写模型（Parakeet）',
           progress,
           downloadedMb: downloaded_mb ?? 0,
           totalMb: total_mb ?? 670,
@@ -253,7 +253,7 @@ export function useDownloadProgressToast() {
         const { modelName } = event.payload;
         const downloadData: DownloadProgress = {
           modelName,
-          displayName: 'Transcription Model (Parakeet)',
+          displayName: '转写模型（Parakeet）',
           progress: 100,
           downloadedMb: 670,
           totalMb: 670,
@@ -272,7 +272,7 @@ export function useDownloadProgressToast() {
         const { modelName, error } = event.payload;
         const downloadData: DownloadProgress = {
           modelName,
-          displayName: 'Transcription Model (Parakeet)',
+          displayName: '转写模型（Parakeet）',
           progress: 0,
           downloadedMb: 0,
           totalMb: 670,
@@ -308,7 +308,7 @@ export function useDownloadProgressToast() {
 
       const downloadData: DownloadProgress = {
         modelName: model,
-        displayName: `Summary Model (${model})`,
+        displayName: `纪要模型（${model}）`,
         progress: progress ?? 0,
         downloadedMb: downloaded_mb ?? 0,
         totalMb: getDownloadTotalMb(total_mb, model),

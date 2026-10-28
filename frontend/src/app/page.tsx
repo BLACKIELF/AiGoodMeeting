@@ -1,4 +1,5 @@
 'use client';
+import { toUserMessage } from '@/lib/user-message';
 
 import { useState, useEffect } from 'react';
 import { RecordingControls } from '@/components/RecordingControls';
@@ -123,12 +124,12 @@ export default function Home() {
       const result = await recoverMeeting(meetingId);
 
       if (result.success) {
-        toast.success('Meeting recovered successfully!', {
+        toast.success('会议已恢复', {
           description: result.audioRecoveryStatus?.status === 'success'
-            ? 'Transcripts and audio recovered'
-            : 'Transcripts recovered (no audio available)',
+            ? '转写与录音均已恢复'
+            : '转写已恢复，未找到可用录音',
           action: result.meetingId ? {
-            label: 'View Meeting',
+            label: '查看会议',
             onClick: () => {
               router.push(`/meeting-details?id=${result.meetingId}`);
             }
@@ -152,8 +153,8 @@ export default function Home() {
         }
       }
     } catch (error) {
-      toast.error('Failed to recover meeting', {
-        description: error instanceof Error ? error.message : 'Unknown error occurred',
+      toast.error('恢复会议失败', {
+        description: toUserMessage(error, '会议未能恢复，请重试。'),
       });
       throw error;
     }
@@ -189,7 +190,7 @@ export default function Home() {
   const isProcessingStop = status === RecordingStatus.PROCESSING_TRANSCRIPTS || isProcessing;
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="agb-page flex h-screen min-w-0 flex-col bg-background text-foreground">
       {/* All Modals supported*/}
       <SettingsModals
         modals={modals}
@@ -217,15 +218,15 @@ export default function Home() {
         {(hasMicrophone || isRecording) &&
           status !== RecordingStatus.PROCESSING_TRANSCRIPTS &&
           status !== RecordingStatus.SAVING && (
-            <div className="fixed bottom-12 left-0 right-0 z-10">
+            <div className="pointer-events-none fixed bottom-6 left-0 right-0 z-10">
               <div
-                className="flex justify-center pl-8 transition-[margin] duration-300"
+                className="flex justify-center px-4 transition-[margin] duration-200 motion-reduce:transition-none"
                 style={{
                   marginLeft: sidebarCollapsed ? '4rem' : '16rem'
                 }}
               >
-                <div className="w-2/3 max-w-[750px] flex justify-center">
-                  <div className="bg-white rounded-full shadow-lg flex items-center">
+                <div className="flex w-full max-w-[750px] justify-center">
+                  <div className="pointer-events-auto flex min-w-0 items-center">
                     <RecordingControls
                       isRecording={recordingState.isRecording}
                       onRecordingStop={(callApi = true) => handleRecordingStop(callApi)}

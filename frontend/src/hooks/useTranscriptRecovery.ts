@@ -1,3 +1,4 @@
+import { toUserMessage } from '@/lib/user-message';
 /**
  * useTranscriptRecovery Hook
  *
@@ -113,13 +114,13 @@ export function useTranscriptRecovery(): UseTranscriptRecoveryReturn {
       // 1. Load meeting metadata
       const metadata = await indexedDBService.getMeetingMetadata(meetingId);
       if (!metadata) {
-        throw new Error('Meeting metadata not found');
+        throw new Error('未找到会议资料。');
       }
 
       // 2. Load all transcripts
       const transcripts = await loadMeetingTranscripts(meetingId);
       if (transcripts.length === 0) {
-        throw new Error('No transcripts found for this meeting');
+        throw new Error('这场会议没有可恢复的转写。');
       }
 
       // 3. Check for folder path
@@ -149,7 +150,7 @@ export function useTranscriptRecovery(): UseTranscriptRecoveryReturn {
             status: 'failed',
             chunk_count: 0,
             estimated_duration_seconds: 0,
-            message: error instanceof Error ? error.message : 'Unknown error'
+            message: toUserMessage(error, '录音恢复失败，转写仍可恢复。')
           };
         }
       } else {
@@ -157,7 +158,7 @@ export function useTranscriptRecovery(): UseTranscriptRecoveryReturn {
           status: 'none',
           chunk_count: 0,
           estimated_duration_seconds: 0,
-          message: 'No folder path available'
+          message: "未找到会议文件夹"
         };
       }
 
@@ -188,8 +189,8 @@ export function useTranscriptRecovery(): UseTranscriptRecoveryReturn {
         await applyPinnedSummaryLanguageToMeeting(savedMeetingId);
       } catch (error) {
         console.warn('Failed to apply pinned summary language to recovered meeting:', error);
-        toast.warning('Could not apply default summary language', {
-          description: 'The recovered meeting was saved, but the default summary language was not applied.',
+        toast.warning("未能应用默认纪要语言", {
+          description: "会议已恢复保存，请在会议中重新选择纪要语言。",
         });
       }
 

@@ -92,7 +92,7 @@ export function usePaginatedTranscripts({
         } catch (err) {
             if (!isCurrentRequest(requestId)) return null;
             console.error('Failed to load meeting metadata:', err);
-            setError('Failed to load meeting details');
+            setError('无法加载会议详情');
             return null;
         }
     }, [meetingId, isCurrentRequest]);
@@ -140,8 +140,8 @@ export function usePaginatedTranscripts({
             return newTranscripts;
         } catch (err) {
             if (!isCurrentRequest(requestId)) return [];
-            console.error('Failed to load transcripts:', err);
-            setError('Failed to load transcripts');
+            console.error('无法加载转写文字:', err);
+            setError('无法加载转写文字');
             return [];
         }
     }, [meetingId, isCurrentRequest]);

@@ -81,6 +81,7 @@ export interface SummaryDataResponse {
   summary_json?: BlockNoteBlock[];
   reasoning_stripped?: boolean;
   normalization_fallback?: boolean;
+  speaker_transcript_updated_at?: string;
   // Legacy format fields
   MeetingName?: string;
   _section_order?: string[];

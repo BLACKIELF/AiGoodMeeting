@@ -18,6 +18,8 @@ import { useTemplates } from '@/hooks/meeting-details/useTemplates';
 import { useCopyOperations } from '@/hooks/meeting-details/useCopyOperations';
 import { useMeetingOperations } from '@/hooks/meeting-details/useMeetingOperations';
 import { useConfig } from '@/contexts/ConfigContext';
+import { useSpeakerTranscript } from '@/hooks/meeting-details/useSpeakerTranscript';
+import { CalendarDays, FileText } from 'lucide-react';
 
 export default function PageContent({
   meeting,
@@ -75,6 +77,7 @@ export default function PageContent({
 
   // Custom hooks
   const meetingData = useMeetingData({ meeting, summaryData, onMeetingUpdated });
+  const speakers = useSpeakerTranscript(meeting.id);
   const templates = useTemplates();
 
   // Callback to register the modal open function
@@ -109,10 +112,10 @@ export default function PageContent({
       const { emit } = await import('@tauri-apps/api/event');
       await emit('model-config-updated', config);
 
-      toast.success('Model settings saved successfully');
+      toast.success('模型设置已保存');
     } catch (error) {
       console.error('Failed to save model config:', error);
-      toast.error('Failed to save model settings');
+      toast.error('模型设置保存失败，请重试');
     }
   };
 
@@ -185,14 +188,35 @@ export default function PageContent({
     onAutoGenerateComplete,
   ]);
 
+  const meetingDate = new Date(meeting.created_at);
+  const formattedDate = Number.isNaN(meetingDate.getTime()) ? null : new Intl.DateTimeFormat('zh-CN', {
+    year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
+  }).format(meetingDate);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
-      className="flex flex-col h-screen min-w-0 bg-gray-50"
+      className="agb-page flex h-dvh min-h-0 min-w-0 flex-col bg-background text-foreground"
     >
-      <div className="flex flex-1 min-w-0 overflow-hidden">
+      <header className="agb-header flex shrink-0 flex-wrap items-center justify-between gap-3 px-5 py-4 md:px-6">
+        <div className="min-w-0 flex-1">
+          <p className="agb-kicker mb-1 text-xs font-medium text-muted-foreground">会议记录</p>
+          <h1 className="break-words text-xl font-semibold leading-snug text-foreground md:text-2xl">
+            {meetingData.meetingTitle}
+          </h1>
+          {formattedDate && <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+            <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
+            <time dateTime={meeting.created_at}>{formattedDate}</time>
+          </p>}
+        </div>
+        <span className="agb-chip inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground">
+          <FileText className="h-3.5 w-3.5" aria-hidden="true" />
+          {totalCount ?? meetingData.transcripts.length} 段转写
+        </span>
+      </header>
+      <div className="flex min-h-0 flex-1 min-w-0 overflow-hidden px-3 pb-3 md:px-5 md:pb-5">
         <MeetingDetailsSplitView
           activeTab={activeTab}
           onTabChange={(tab) => {
@@ -218,6 +242,7 @@ export default function PageContent({
               meetingId={meeting.id}
               meetingFolderPath={meeting.folder_path}
               onRefetchTranscripts={onRefetchTranscripts}
+              speakers={speakers}
             />
           }
           summary={
@@ -249,6 +274,9 @@ export default function PageContent({
               onTemplateSelect={templates.handleTemplateSelection}
               isModelConfigLoading={isModelConfigLoading}
               onOpenModelSettings={handleRegisterModalOpen}
+              speakerSummaryStale={!!speakers.transcript
+                && summaryGeneration.summarySpeakerRevision !== speakers.transcript.updated_at}
+              isSpeakerTranscriptBusy={!!speakers.busy || speakers.isLoading}
             />
           }
         />

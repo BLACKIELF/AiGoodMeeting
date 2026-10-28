@@ -1,0 +1,36 @@
+{
+  "productName": "AiGoodMeeting 1028v3",
+  "identifier": "com.meetily.local-speakers",
+  "build": {
+    "beforeBuildCommand": "node node_modules/next/dist/bin/next build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "AiGoodMeeting · 会议纪要",
+        "width": 1240,
+        "height": 820,
+        "resizable": true,
+        "fullscreen": false,
+        "theme": null,
+        "decorations": true,
+        "minWidth": 760,
+        "minHeight": 580
+      }
+    ]
+  },
+  "bundle": {
+    "targets": [
+      "app"
+    ],
+    "createUpdaterArtifacts": false,
+    "icon": [
+      "icons/aigoodbro.icns"
+    ]
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": []
+    }
+  }
+}

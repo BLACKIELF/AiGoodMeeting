@@ -13,7 +13,8 @@ describe('empty summary state', () => {
     );
 
     expect(html).toContain('role="alert"');
-    expect(html).toContain('Summary request failed');
-    expect(html).toContain('Retry summary');
+    expect(html).not.toContain('Summary request failed');
+    expect(html).toMatch(/[\u3400-\u9fff]/);
+    expect(html).toContain('重新生成纪要');
   });
 });

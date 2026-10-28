@@ -1,0 +1,638 @@
+{
+  "snapshot_version": "1028v1",
+  "captured_at": "2026-10-28T12:03:01.353860+00:00",
+  "source_repository": "https://github.com/BLACKIELF/AgentHub-AiGoodBro.git",
+  "source_worktree": "upstream checkout at source_head_revision",
+  "source_head_revision": "622e76ea8c8edf5847bb01711b68c3b5867ea04a",
+  "source_head_timestamp": "2026-10-23T12:30:14+08:00",
+  "source_worktree_has_other_changes": true,
+  "copied_scope_status": "clean; all original package and visual-source paths match the recorded HEAD revision",
+  "upstream_palette_author": "codexU contributors; package-specific notices retained verbatim",
+  "source_license": "MIT; root copyright (c) 2026 Guomeiqing; package copyrights retained in each package LICENSE",
+  "public_packages": [
+    {
+      "id": "default",
+      "source_id": "codexu.default",
+      "version": "1.0.0",
+      "lifecycle": "stable",
+      "source_directory": "Resources/Palettes/codexu.default",
+      "destination_directory": "frontend/public/aigoodbro-skins/default",
+      "file_count": 8,
+      "svg_count": 0,
+      "declared_asset_count": 0,
+      "license": "MIT",
+      "license_destination": "frontend/public/aigoodbro-skins/default/LICENSE"
+    },
+    {
+      "id": "liquid-keycap",
+      "source_id": "codexu.liquid-keycap",
+      "version": "1.0.0",
+      "lifecycle": "stable",
+      "source_directory": "Resources/Palettes/codexu.liquid-keycap",
+      "destination_directory": "frontend/public/aigoodbro-skins/liquid-keycap",
+      "file_count": 8,
+      "svg_count": 0,
+      "declared_asset_count": 0,
+      "license": "MIT",
+      "license_destination": "frontend/public/aigoodbro-skins/liquid-keycap/LICENSE"
+    },
+    {
+      "id": "blue-white-porcelain",
+      "source_id": "codexu.blue-white-porcelain",
+      "version": "1.0.0",
+      "lifecycle": "stable",
+      "source_directory": "Resources/Palettes/codexu.blue-white-porcelain",
+      "destination_directory": "frontend/public/aigoodbro-skins/blue-white-porcelain",
+      "file_count": 20,
+      "svg_count": 12,
+      "declared_asset_count": 12,
+      "license": "MIT",
+      "license_destination": "frontend/public/aigoodbro-skins/blue-white-porcelain/LICENSE"
+    },
+    {
+      "id": "dunhuang-apsara",
+      "source_id": "codexu.dunhuang-apsara",
+      "version": "1.0.0",
+      "lifecycle": "stable",
+      "source_directory": "Resources/Palettes/codexu.dunhuang-apsara",
+      "destination_directory": "frontend/public/aigoodbro-skins/dunhuang-apsara",
+      "file_count": 8,
+      "svg_count": 0,
+      "declared_asset_count": 0,
+      "license": "MIT",
+      "license_destination": "frontend/public/aigoodbro-skins/dunhuang-apsara/LICENSE"
+    },
+    {
+      "id": "forbidden-city-red",
+      "source_id": "codexu.forbidden-city-red",
+      "version": "1.0.0",
+      "lifecycle": "stable",
+      "source_directory": "Resources/Palettes/codexu.forbidden-city-red",
+      "destination_directory": "frontend/public/aigoodbro-skins/forbidden-city-red",
+      "file_count": 8,
+      "svg_count": 0,
+      "declared_asset_count": 0,
+      "license": "MIT",
+      "license_destination": "frontend/public/aigoodbro-skins/forbidden-city-red/LICENSE"
+    },
+    {
+      "id": "orchid-dawn",
+      "source_id": "codexu.orchid-dawn",
+      "version": "1.0.0",
+      "lifecycle": "stable",
+      "source_directory": "Resources/Palettes/codexu.orchid-dawn",
+      "destination_directory": "frontend/public/aigoodbro-skins/orchid-dawn",
+      "file_count": 8,
+      "svg_count": 0,
+      "declared_asset_count": 0,
+      "license": "MIT",
+      "license_destination": "frontend/public/aigoodbro-skins/orchid-dawn/LICENSE"
+    },
+    {
+      "id": "thousand-li-landscape",
+      "source_id": "codexu.thousand-li-landscape",
+      "version": "1.0.0",
+      "lifecycle": "stable",
+      "source_directory": "Resources/Palettes/codexu.thousand-li-landscape",
+      "destination_directory": "frontend/public/aigoodbro-skins/thousand-li-landscape",
+      "file_count": 8,
+      "svg_count": 0,
+      "declared_asset_count": 0,
+      "license": "MIT",
+      "license_destination": "frontend/public/aigoodbro-skins/thousand-li-landscape/LICENSE"
+    }
+  ],
+  "visual_snapshot_files": [
+    "Sources/CodexUsageWidget/DesignSystem/WorkspaceGlass.swift",
+    "Sources/CodexUsageWidget/Domain/WorkspaceGlassPreferences.swift",
+    "Sources/CodexUsageWidget/UI/PaletteSettingsView.swift",
+    "Sources/CodexUsageWidget/UI/PaletteVisuals.swift",
+    "Sources/CodexUsageWidget/DesignSystem/FixedVisualPalette.swift"
+  ],
+  "copied_file_count": 74,
+  "public_package_file_count": 68,
+  "visual_snapshot_file_count": 5,
+  "original_root_license_file_count": 1,
+  "asset_boundary": "Six packs declare no assets. Only blue-white-porcelain contains 12 original SVG files (6 light, 6 dark). No textures or account functionality were added.",
+  "integration_boundary": "Swift files are read-only reference snapshots, not compiled or imported by the meeting app. Theme adaptation and actual progress rendering are maintained separately by the theme owner.",
+  "files": [
+    {
+      "source": "Resources/Palettes/codexu.default/LICENSE",
+      "destination": "frontend/public/aigoodbro-skins/default/LICENSE",
+      "sha256": "4199e0ec7c8a1874adbe6cd75aa7626d2261f2886122112973c5e4784ef18d48",
+      "bytes": 1071,
+      "source_git_blob": "7fbd0f13fc1a5d12ba570519fc3b894ef4d1056b"
+    },
+    {
+      "source": "Resources/Palettes/codexu.default/README.md",
+      "destination": "frontend/public/aigoodbro-skins/default/README.md",
+      "sha256": "15b48029525ff884a6e5cfc4e3aace9de3dac7e15579c69a1e4bba8143e60d96",
+      "bytes": 134,
+      "source_git_blob": "6392226273a526b7830f01182ea114b9f85d0fc7"
+    },
+    {
+      "source": "Resources/Palettes/codexu.default/assets/manifest.json",
+      "destination": "frontend/public/aigoodbro-skins/default/assets/manifest.json",
+      "sha256": "48cf63ab2f3b4655aa4886dc2d745d4b1fd389c53c1f08bd4f7086158db4eb45",
+      "bytes": 31,
+      "source_git_blob": "3cfd504354b6db40ec83567cb0521fa2da39c24f"
+    },
+    {
+      "source": "Resources/Palettes/codexu.default/localizations/en.json",
+      "destination": "frontend/public/aigoodbro-skins/default/localizations/en.json",
+      "sha256": "df958134ebb1545f93b148e526f33aa9f77ef8eb751a7d2283197649e37b6ff0",
+      "bytes": 153,
+      "source_git_blob": "5a5eb4358fd13e3a346c6d3387f50936ff120c70"
+    },
+    {
+      "source": "Resources/Palettes/codexu.default/localizations/zh-Hans.json",
+      "destination": "frontend/public/aigoodbro-skins/default/localizations/zh-Hans.json",
+      "sha256": "82b582e14b0b30c3f2c9fd82fd17561555f6aa1aa1a67095eccb751ce3ad200d",
+      "bytes": 132,
+      "source_git_blob": "b6a32a0b5499cceef7f965a3d0fb9f7970437db9"
+    },
+    {
+      "source": "Resources/Palettes/codexu.default/manifest.json",
+      "destination": "frontend/public/aigoodbro-skins/default/manifest.json",
+      "sha256": "4655ddebace5f0be4d4fe4f83672a40042fe0373126cb7fb762b02b5ec087076",
+      "bytes": 626,
+      "source_git_blob": "0579a8de5f1965a21af880cbfb6dc81bc1103df1"
+    },
+    {
+      "source": "Resources/Palettes/codexu.default/tokens/dark.json",
+      "destination": "frontend/public/aigoodbro-skins/default/tokens/dark.json",
+      "sha256": "3096b9b49a1936d2018c9c14d4f5baf8177e9b3ac2a8b7606b9c8a539cd1fec1",
+      "bytes": 1177,
+      "source_git_blob": "01448db471aac03c97a9693f4fc2771649fa4216"
+    },
+    {
+      "source": "Resources/Palettes/codexu.default/tokens/light.json",
+      "destination": "frontend/public/aigoodbro-skins/default/tokens/light.json",
+      "sha256": "3096b9b49a1936d2018c9c14d4f5baf8177e9b3ac2a8b7606b9c8a539cd1fec1",
+      "bytes": 1177,
+      "source_git_blob": "01448db471aac03c97a9693f4fc2771649fa4216"
+    },
+    {
+      "source": "Resources/Palettes/codexu.liquid-keycap/LICENSE",
+      "destination": "frontend/public/aigoodbro-skins/liquid-keycap/LICENSE",
+      "sha256": "b3df46e55f9cb40a9671eb2cc97ad75a0af638c1a32a6c28d28c9cd266ec3a14",
+      "bytes": 1091,
+      "source_git_blob": "46982fbb2e7dbc978552a3bf1df1dc4c16b08035"
+    },
+    {
+      "source": "Resources/Palettes/codexu.liquid-keycap/README.md",
+      "destination": "frontend/public/aigoodbro-skins/liquid-keycap/README.md",
+      "sha256": "d9e4d25430b449994043f0a5fe802dfe4181d4a58113c88a549a2e39dab5e113",
+      "bytes": 101,
+      "source_git_blob": "225d58ae6015e341af3f348b617881229b6d86e1"
+    },
+    {
+      "source": "Resources/Palettes/codexu.liquid-keycap/assets/manifest.json",
+      "destination": "frontend/public/aigoodbro-skins/liquid-keycap/assets/manifest.json",
+      "sha256": "48cf63ab2f3b4655aa4886dc2d745d4b1fd389c53c1f08bd4f7086158db4eb45",
+      "bytes": 31,
+      "source_git_blob": "3cfd504354b6db40ec83567cb0521fa2da39c24f"
+    },
+    {
+      "source": "Resources/Palettes/codexu.liquid-keycap/localizations/en.json",
+      "destination": "frontend/public/aigoodbro-skins/liquid-keycap/localizations/en.json",
+      "sha256": "8a78c732759d952ed6aa530195bfa46e9c4c31676bebb27bb59948b4097d270e",
+      "bytes": 221,
+      "source_git_blob": "1e0a6aa713e9a1cb03b0dddd6fea68124f846a69"
+    },
+    {
+      "source": "Resources/Palettes/codexu.liquid-keycap/localizations/zh-Hans.json",
+      "destination": "frontend/public/aigoodbro-skins/liquid-keycap/localizations/zh-Hans.json",
+      "sha256": "20d687274b8f1ca4db9b47a89ef5b9486e296e56f32aeff8f7d6f6d1acbdda18",
+      "bytes": 171,
+      "source_git_blob": "c2971d0cdcabd491060fe01916fdb9ac7dfd2eb0"
+    },
+    {
+      "source": "Resources/Palettes/codexu.liquid-keycap/manifest.json",
+      "destination": "frontend/public/aigoodbro-skins/liquid-keycap/manifest.json",
+      "sha256": "6cd9e90f8f568ad043a8be5b0811fa21369a38816a4eda4c86b737cb72c80526",
+      "bytes": 591,
+      "source_git_blob": "56f88abc8321a4b141d82ef5cac72a604c659c85"
+    },
+    {
+      "source": "Resources/Palettes/codexu.liquid-keycap/tokens/dark.json",
+      "destination": "frontend/public/aigoodbro-skins/liquid-keycap/tokens/dark.json",
+      "sha256": "cd56a62b3c4b80f61db30169ca8ed59208d8b73274b47d5e8d8848a8290b6cdd",
+      "bytes": 1177,
+      "source_git_blob": "42d195eed6107c5eb584cca08ed55bf122ea697d"
+    },
+    {
+      "source": "Resources/Palettes/codexu.liquid-keycap/tokens/light.json",
+      "destination": "frontend/public/aigoodbro-skins/liquid-keycap/tokens/light.json",
+      "sha256": "10d89a087c62855aeee96e21a1956f746a95b9057442d6d2bce8423ef2756d42",
+      "bytes": 1177,
+      "source_git_blob": "3879b1c00d3230d765cfabb890e95da11998d360"
+    },
+    {
+      "source": "Resources/Palettes/codexu.blue-white-porcelain/LICENSE",
+      "destination": "frontend/public/aigoodbro-skins/blue-white-porcelain/LICENSE",
+      "sha256": "4199e0ec7c8a1874adbe6cd75aa7626d2261f2886122112973c5e4784ef18d48",
+      "bytes": 1071,
+      "source_git_blob": "7fbd0f13fc1a5d12ba570519fc3b894ef4d1056b"
+    },
+    {
+      "source": "Resources/Palettes/codexu.blue-white-porcelain/README.md",
+      "destination": "frontend/public/aigoodbro-skins/blue-white-porcelain/README.md",
+      "sha256": "c16af1876060082a6c87b1fd8f19837d1d587f65e8db5d42c34958b2e31079d5",
+      "bytes": 217,
+      "source_git_blob": "bb99c4dfe4bf856fd4c872b52c81cdef5fe84912"
+    },
+    {
+      "source": "Resources/Palettes/codexu.blue-white-porcelain/assets/dark/chart-bar.svg",
+      "destination": "frontend/public/aigoodbro-skins/blue-white-porcelain/assets/dark/chart-bar.svg",
+      "sha256": "2cae1ca928f1a127b48ac87259769cc0b302d7984237b9caedddb1379a65815b",
+      "bytes": 1224,
+      "source_git_blob": "cefa31dbfd94c2a9afbdb0d60673570117094eb0"
+    },
+    {
+      "source": "Resources/Palettes/codexu.blue-white-porcelain/assets/dark/progress-linear.svg",
+      "destination": "frontend/public/aigoodbro-skins/blue-white-porcelain/assets/dark/progress-linear.svg",
+      "sha256": "8ffd362c34e2309319cc2aceaefc3f7ca974c77d7a333d96e0ec28c6a9d5a058",
+      "bytes": 1304,
+      "source_git_blob": "24646ffed6e058effdc69d82e288aa99d3b559aa"
+    },
+    {
+      "source": "Resources/Palettes/codexu.blue-white-porcelain/assets/dark/quota-primary-cap.svg",
+      "destination": "frontend/public/aigoodbro-skins/blue-white-porcelain/assets/dark/quota-primary-cap.svg",
+      "sha256": "e0b9ca383c68827dab7c3bb472718fddf6cac435a725796168f80ec60e8b43e5",
+      "bytes": 446,
+      "source_git_blob": "0a11c706a4ca5d180a8849ddb0717a0414128a39"
+    },
+    {
+      "source": "Resources/Palettes/codexu.blue-white-porcelain/assets/dark/quota-primary-ring.svg",
+      "destination": "frontend/public/aigoodbro-skins/blue-white-porcelain/assets/dark/quota-primary-ring.svg",
+      "sha256": "9798a3a3f8927cd8672739e75439e21b641e8f5f7e72323c5d0e8b9f66ae660d",
+      "bytes": 4063,
+      "source_git_blob": "92e52202a6efa3fec34d9577caa88f8d711cb206"
+    },
+    {
+      "source": "Resources/Palettes/codexu.blue-white-porcelain/assets/dark/quota-secondary-cap.svg",
+      "destination": "frontend/public/aigoodbro-skins/blue-white-porcelain/assets/dark/quota-secondary-cap.svg",
+      "sha256": "725c4ddda26b3297205b0a585eb1a790679bc8e79b727e3905e022504378ecc6",
+      "bytes": 479,
+      "source_git_blob": "7ae08a830f77e6f694facfe0c15d18f839355152"
+    },
+    {
+      "source": "Resources/Palettes/codexu.blue-white-porcelain/assets/dark/quota-secondary-ring.svg",
+      "destination": "frontend/public/aigoodbro-skins/blue-white-porcelain/assets/dark/quota-secondary-ring.svg",
+      "sha256": "fe550ea4bf3403c6d24e81ed4c66093452bf40f0a8a4ca5bfececa78942bab44",
+      "bytes": 10876,
+      "source_git_blob": "98beb08155cae01f4c4fa310fa0c101cfd1ac005"
+    },
+    {
+      "source": "Resources/Palettes/codexu.blue-white-porcelain/assets/light/chart-bar.svg",
+      "destination": "frontend/public/aigoodbro-skins/blue-white-porcelain/assets/light/chart-bar.svg",
+      "sha256": "7e273e109bee758e995b2ee208a7d53e4aaedcf8dfb87c76e4279080f1a07ccc",
+      "bytes": 1264,
+      "source_git_blob": "1107968d102a089f447165ba1cce7e6ae37d3060"
+    },
+    {
+      "source": "Resources/Palettes/codexu.blue-white-porcelain/assets/light/progress-linear.svg",
+      "destination": "frontend/public/aigoodbro-skins/blue-white-porcelain/assets/light/progress-linear.svg",
+      "sha256": "0d388b23594c5540b9338c224c8d97c9845baea660bf9e6f11a3fd6476fede05",
+      "bytes": 1552,
+      "source_git_blob": "bb0b2cfde5630837cb49399700e0d23889a00271"
+    },
+    {
+      "source": "Resources/Palettes/codexu.blue-white-porcelain/assets/light/quota-primary-cap.svg",
+      "destination": "frontend/public/aigoodbro-skins/blue-white-porcelain/assets/light/quota-primary-cap.svg",
+      "sha256": "39015e52e35552a5e2914092b92547a709befc94ce0e6bfb49432c114c7840b6",
+      "bytes": 446,
+      "source_git_blob": "c95011c7eb2e39b5daf7e5a04b69bec6c9a09fbf"
+    },
+    {
+      "source": "Resources/Palettes/codexu.blue-white-porcelain/assets/light/quota-primary-ring.svg",
+      "destination": "frontend/public/aigoodbro-skins/blue-white-porcelain/assets/light/quota-primary-ring.svg",
+      "sha256": "4b09c7e01e00bef891115d6418a22064dce216afee5569bd2cd23b95b63f2294",
+      "bytes": 4144,
+      "source_git_blob": "70d6f00834896c3f7ca9c81f895505567321e50c"
+    },
+    {
+      "source": "Resources/Palettes/codexu.blue-white-porcelain/assets/light/quota-secondary-cap.svg",
+      "destination": "frontend/public/aigoodbro-skins/blue-white-porcelain/assets/light/quota-secondary-cap.svg",
+      "sha256": "5fe08ffefb8366485c866985f0304beeff6378702209fe9b0daf3ac1ee1f25a7",
+      "bytes": 479,
+      "source_git_blob": "08114769985d13482d08d6d0fbb73eedb120aae2"
+    },
+    {
+      "source": "Resources/Palettes/codexu.blue-white-porcelain/assets/light/quota-secondary-ring.svg",
+      "destination": "frontend/public/aigoodbro-skins/blue-white-porcelain/assets/light/quota-secondary-ring.svg",
+      "sha256": "231b5240acca8ec9f190360e5dd1d27121cfa4ade4ba77487aed894dab581581",
+      "bytes": 10876,
+      "source_git_blob": "9bfcef55022ec96608266cd5c7e799ea1ff5d6f8"
+    },
+    {
+      "source": "Resources/Palettes/codexu.blue-white-porcelain/assets/manifest.json",
+      "destination": "frontend/public/aigoodbro-skins/blue-white-porcelain/assets/manifest.json",
+      "sha256": "8f993238c2ca526515c58a81cdfdae65195d25ce6e25d974398627fa2a3379e0",
+      "bytes": 2059,
+      "source_git_blob": "da0ee4a9fbbe3b4b0b024e4047eaaf635d8520d5"
+    },
+    {
+      "source": "Resources/Palettes/codexu.blue-white-porcelain/localizations/en.json",
+      "destination": "frontend/public/aigoodbro-skins/blue-white-porcelain/localizations/en.json",
+      "sha256": "3d533e589faf9d2a8fd3c9aca9edbfdd2403aa1cbcbf0be2751a5fab4db8623a",
+      "bytes": 191,
+      "source_git_blob": "86382d58849018860c2ff0e4dc6b88215ab55869"
+    },
+    {
+      "source": "Resources/Palettes/codexu.blue-white-porcelain/localizations/zh-Hans.json",
+      "destination": "frontend/public/aigoodbro-skins/blue-white-porcelain/localizations/zh-Hans.json",
+      "sha256": "f8e80baffd93a9767b20288c92990d29598894534feaa4898a2b0d15fde739a3",
+      "bytes": 165,
+      "source_git_blob": "6ffda4bc74d6ccfb436a98a11b25ec2f207872dc"
+    },
+    {
+      "source": "Resources/Palettes/codexu.blue-white-porcelain/manifest.json",
+      "destination": "frontend/public/aigoodbro-skins/blue-white-porcelain/manifest.json",
+      "sha256": "ad08676e58efdbde70827239d9fdf92d990f8636b7293eab00aaffb18d1727af",
+      "bytes": 758,
+      "source_git_blob": "f26efd7769309f2190b65c8a9d74379b2419800b"
+    },
+    {
+      "source": "Resources/Palettes/codexu.blue-white-porcelain/tokens/dark.json",
+      "destination": "frontend/public/aigoodbro-skins/blue-white-porcelain/tokens/dark.json",
+      "sha256": "6a65f4065b8515d52344b4239765883b16bc175086237501d9314e9898166210",
+      "bytes": 1177,
+      "source_git_blob": "00151ce1fc8e86bdd8f5882fba95948f565b06aa"
+    },
+    {
+      "source": "Resources/Palettes/codexu.blue-white-porcelain/tokens/light.json",
+      "destination": "frontend/public/aigoodbro-skins/blue-white-porcelain/tokens/light.json",
+      "sha256": "4393698e84836c01704d9b8f13f7c0ebeb2b8295f03b906c44881fd74dcce156",
+      "bytes": 1177,
+      "source_git_blob": "1147544266772a4a128fc9bbc4b475a65d5b357c"
+    },
+    {
+      "source": "Resources/Palettes/codexu.dunhuang-apsara/LICENSE",
+      "destination": "frontend/public/aigoodbro-skins/dunhuang-apsara/LICENSE",
+      "sha256": "4199e0ec7c8a1874adbe6cd75aa7626d2261f2886122112973c5e4784ef18d48",
+      "bytes": 1071,
+      "source_git_blob": "7fbd0f13fc1a5d12ba570519fc3b894ef4d1056b"
+    },
+    {
+      "source": "Resources/Palettes/codexu.dunhuang-apsara/README.md",
+      "destination": "frontend/public/aigoodbro-skins/dunhuang-apsara/README.md",
+      "sha256": "5a614ce9ed2323542709ab4541358f71880273d5d22c2e22f27cbfdb355fc5c6",
+      "bytes": 133,
+      "source_git_blob": "a73f1fd984600a5e740aa7cc5144c0e249ab5a19"
+    },
+    {
+      "source": "Resources/Palettes/codexu.dunhuang-apsara/assets/manifest.json",
+      "destination": "frontend/public/aigoodbro-skins/dunhuang-apsara/assets/manifest.json",
+      "sha256": "a8174f5941573d1acd5d5df5dee4bca235701e21c29685694d143512d3247acf",
+      "bytes": 35,
+      "source_git_blob": "4a9a47efa330c3d9a60ab151c114b9a2088fce45"
+    },
+    {
+      "source": "Resources/Palettes/codexu.dunhuang-apsara/localizations/en.json",
+      "destination": "frontend/public/aigoodbro-skins/dunhuang-apsara/localizations/en.json",
+      "sha256": "c564b1fd4f33a7fddbf813bc8a0cfc7fe3b5ec991821c7869c07a8d3ee5f5fea",
+      "bytes": 222,
+      "source_git_blob": "34afd472b804bd32c246197c581c2e0c739cf5ef"
+    },
+    {
+      "source": "Resources/Palettes/codexu.dunhuang-apsara/localizations/zh-Hans.json",
+      "destination": "frontend/public/aigoodbro-skins/dunhuang-apsara/localizations/zh-Hans.json",
+      "sha256": "6dd81e16eb8d9d3a782e7cbf16325996ad06c03b549ca16e3a984d4cc25057be",
+      "bytes": 198,
+      "source_git_blob": "288696929c3e8cfe4b87605d9e82a87687f77479"
+    },
+    {
+      "source": "Resources/Palettes/codexu.dunhuang-apsara/manifest.json",
+      "destination": "frontend/public/aigoodbro-skins/dunhuang-apsara/manifest.json",
+      "sha256": "6c7070544bf8357a17817a918578850186fa010296dcb7550f8a6b727e1d2e56",
+      "bytes": 783,
+      "source_git_blob": "9665f3c34fa3d49f6adc9623c53d6473a376bcbe"
+    },
+    {
+      "source": "Resources/Palettes/codexu.dunhuang-apsara/tokens/dark.json",
+      "destination": "frontend/public/aigoodbro-skins/dunhuang-apsara/tokens/dark.json",
+      "sha256": "4544d05ad642075a000cdbd8727912293dca2fa47e21726ccd382e377f92479c",
+      "bytes": 1429,
+      "source_git_blob": "38740fed18d50002cb1b6c1a6a18d0fd6ab1ac23"
+    },
+    {
+      "source": "Resources/Palettes/codexu.dunhuang-apsara/tokens/light.json",
+      "destination": "frontend/public/aigoodbro-skins/dunhuang-apsara/tokens/light.json",
+      "sha256": "3b5d9ec187ca7796f70fa3facdc6e969fe99a7bc3d6b11334c5e7f2e092b25e0",
+      "bytes": 1429,
+      "source_git_blob": "347c8fe915b4d7eb0aae8393360c7356c08021c8"
+    },
+    {
+      "source": "Resources/Palettes/codexu.forbidden-city-red/LICENSE",
+      "destination": "frontend/public/aigoodbro-skins/forbidden-city-red/LICENSE",
+      "sha256": "4199e0ec7c8a1874adbe6cd75aa7626d2261f2886122112973c5e4784ef18d48",
+      "bytes": 1071,
+      "source_git_blob": "7fbd0f13fc1a5d12ba570519fc3b894ef4d1056b"
+    },
+    {
+      "source": "Resources/Palettes/codexu.forbidden-city-red/README.md",
+      "destination": "frontend/public/aigoodbro-skins/forbidden-city-red/README.md",
+      "sha256": "4b5d43f69c1f7ed05b4a4ee21c4698bf1ceeba5878c2e86525aff7a90e3e998c",
+      "bytes": 133,
+      "source_git_blob": "b78a6a2822e13925c1156023df4ff93ed081ea78"
+    },
+    {
+      "source": "Resources/Palettes/codexu.forbidden-city-red/assets/manifest.json",
+      "destination": "frontend/public/aigoodbro-skins/forbidden-city-red/assets/manifest.json",
+      "sha256": "a8174f5941573d1acd5d5df5dee4bca235701e21c29685694d143512d3247acf",
+      "bytes": 35,
+      "source_git_blob": "4a9a47efa330c3d9a60ab151c114b9a2088fce45"
+    },
+    {
+      "source": "Resources/Palettes/codexu.forbidden-city-red/localizations/en.json",
+      "destination": "frontend/public/aigoodbro-skins/forbidden-city-red/localizations/en.json",
+      "sha256": "a13ee579b346b7dd3ea3acbd64546b7c371ad53520973129c6f8141bcc6cf4c4",
+      "bytes": 219,
+      "source_git_blob": "4782a358572bce18e1bce089c4be1aaaddd03452"
+    },
+    {
+      "source": "Resources/Palettes/codexu.forbidden-city-red/localizations/zh-Hans.json",
+      "destination": "frontend/public/aigoodbro-skins/forbidden-city-red/localizations/zh-Hans.json",
+      "sha256": "2880ed52346194dbb67083f78a8ede5917d3b6c280bfc8cdc2de434604b430e6",
+      "bytes": 192,
+      "source_git_blob": "4a0725b48ce5217d1ad726a61e11affde1b26f09"
+    },
+    {
+      "source": "Resources/Palettes/codexu.forbidden-city-red/manifest.json",
+      "destination": "frontend/public/aigoodbro-skins/forbidden-city-red/manifest.json",
+      "sha256": "b612a0dc254d155732b2c0acd5d429b0497d1bd662e5f4189ba26900a0764a67",
+      "bytes": 797,
+      "source_git_blob": "4bc75ad68732bd1c4f14fd2ec9d59ae40b553f43"
+    },
+    {
+      "source": "Resources/Palettes/codexu.forbidden-city-red/tokens/dark.json",
+      "destination": "frontend/public/aigoodbro-skins/forbidden-city-red/tokens/dark.json",
+      "sha256": "3ad3f66dd498a5709381a8a4942685101a1d7618e7938280d1deed6cafe85d0c",
+      "bytes": 1429,
+      "source_git_blob": "7b2392baeeba389d96ecdd8dbe3181a005a2b148"
+    },
+    {
+      "source": "Resources/Palettes/codexu.forbidden-city-red/tokens/light.json",
+      "destination": "frontend/public/aigoodbro-skins/forbidden-city-red/tokens/light.json",
+      "sha256": "88cbb1abad2a562fe813cd3ecfea4b9b5eb2fed45047d08446d9d08e816a3e62",
+      "bytes": 1429,
+      "source_git_blob": "195566bd4397ab1553d3361106959e032bd322cc"
+    },
+    {
+      "source": "Resources/Palettes/codexu.orchid-dawn/LICENSE",
+      "destination": "frontend/public/aigoodbro-skins/orchid-dawn/LICENSE",
+      "sha256": "4199e0ec7c8a1874adbe6cd75aa7626d2261f2886122112973c5e4784ef18d48",
+      "bytes": 1071,
+      "source_git_blob": "7fbd0f13fc1a5d12ba570519fc3b894ef4d1056b"
+    },
+    {
+      "source": "Resources/Palettes/codexu.orchid-dawn/README.md",
+      "destination": "frontend/public/aigoodbro-skins/orchid-dawn/README.md",
+      "sha256": "49a0d3dd5da7c2dacc3ef5255d95412ab10375dd902c9a0465753820581e5115",
+      "bytes": 136,
+      "source_git_blob": "722274596019a6a72214c3e4337ce012a2baf3a6"
+    },
+    {
+      "source": "Resources/Palettes/codexu.orchid-dawn/assets/manifest.json",
+      "destination": "frontend/public/aigoodbro-skins/orchid-dawn/assets/manifest.json",
+      "sha256": "a8174f5941573d1acd5d5df5dee4bca235701e21c29685694d143512d3247acf",
+      "bytes": 35,
+      "source_git_blob": "4a9a47efa330c3d9a60ab151c114b9a2088fce45"
+    },
+    {
+      "source": "Resources/Palettes/codexu.orchid-dawn/localizations/en.json",
+      "destination": "frontend/public/aigoodbro-skins/orchid-dawn/localizations/en.json",
+      "sha256": "a78e4a747ce559f4f93180b19e1caccece63e7ebd38027445ccc1e491f308cb7",
+      "bytes": 226,
+      "source_git_blob": "48a8ed18d37a5a21b2aa3a8addccca9d584b9d43"
+    },
+    {
+      "source": "Resources/Palettes/codexu.orchid-dawn/localizations/zh-Hans.json",
+      "destination": "frontend/public/aigoodbro-skins/orchid-dawn/localizations/zh-Hans.json",
+      "sha256": "ba535f63ff5eda26dc870f42512a90324a703ee662fb888d31107cbe3bb54bd1",
+      "bytes": 208,
+      "source_git_blob": "a8d0cf80fe4f7717498939cd104629dc9d8d8f52"
+    },
+    {
+      "source": "Resources/Palettes/codexu.orchid-dawn/manifest.json",
+      "destination": "frontend/public/aigoodbro-skins/orchid-dawn/manifest.json",
+      "sha256": "79da7295365aff5b78129ac1160a985834ee54c6e56decd2257fd2023031cc0b",
+      "bytes": 786,
+      "source_git_blob": "b8a87f5780d8bbf9b99af5d87d0c1aab7ebd2bb9"
+    },
+    {
+      "source": "Resources/Palettes/codexu.orchid-dawn/tokens/dark.json",
+      "destination": "frontend/public/aigoodbro-skins/orchid-dawn/tokens/dark.json",
+      "sha256": "14d891cc8c82891e0f99f93714e683a745ac577bb1e6ebb33462888dfe68fa65",
+      "bytes": 1429,
+      "source_git_blob": "3ec9df9cf2e07b467db00fd5c0dcd332b7336feb"
+    },
+    {
+      "source": "Resources/Palettes/codexu.orchid-dawn/tokens/light.json",
+      "destination": "frontend/public/aigoodbro-skins/orchid-dawn/tokens/light.json",
+      "sha256": "884f19ace930a79475ef21a6e8c06a8f770d701deb07bc299ed5b2687b25b59a",
+      "bytes": 1429,
+      "source_git_blob": "84c0c534db3ec797fc7174e41d3bf13c7d58d73c"
+    },
+    {
+      "source": "Resources/Palettes/codexu.thousand-li-landscape/LICENSE",
+      "destination": "frontend/public/aigoodbro-skins/thousand-li-landscape/LICENSE",
+      "sha256": "4199e0ec7c8a1874adbe6cd75aa7626d2261f2886122112973c5e4784ef18d48",
+      "bytes": 1071,
+      "source_git_blob": "7fbd0f13fc1a5d12ba570519fc3b894ef4d1056b"
+    },
+    {
+      "source": "Resources/Palettes/codexu.thousand-li-landscape/README.md",
+      "destination": "frontend/public/aigoodbro-skins/thousand-li-landscape/README.md",
+      "sha256": "b0ab071109fa48da6fab060b0ffc98076fb6c49385b1406f77b4b8c703a5ce3f",
+      "bytes": 133,
+      "source_git_blob": "cd2c6c7c058c3fdd2aa82e696b069eab59ccba44"
+    },
+    {
+      "source": "Resources/Palettes/codexu.thousand-li-landscape/assets/manifest.json",
+      "destination": "frontend/public/aigoodbro-skins/thousand-li-landscape/assets/manifest.json",
+      "sha256": "a8174f5941573d1acd5d5df5dee4bca235701e21c29685694d143512d3247acf",
+      "bytes": 35,
+      "source_git_blob": "4a9a47efa330c3d9a60ab151c114b9a2088fce45"
+    },
+    {
+      "source": "Resources/Palettes/codexu.thousand-li-landscape/localizations/en.json",
+      "destination": "frontend/public/aigoodbro-skins/thousand-li-landscape/localizations/en.json",
+      "sha256": "69ba6bcdec7fb44af0b30da7f0bba5a135cf2e59467dca3aa76be06c83601a01",
+      "bytes": 220,
+      "source_git_blob": "54c76bb94d49eb0bfbca7da02a7e318ca3657b25"
+    },
+    {
+      "source": "Resources/Palettes/codexu.thousand-li-landscape/localizations/zh-Hans.json",
+      "destination": "frontend/public/aigoodbro-skins/thousand-li-landscape/localizations/zh-Hans.json",
+      "sha256": "f5c5b5442e59284933a8aba3e3dc08a9d68ffaf3111d0315ce225a71a3dc325a",
+      "bytes": 183,
+      "source_git_blob": "70bfa365e9c6b02201a0a60faeab5f14debebccd"
+    },
+    {
+      "source": "Resources/Palettes/codexu.thousand-li-landscape/manifest.json",
+      "destination": "frontend/public/aigoodbro-skins/thousand-li-landscape/manifest.json",
+      "sha256": "4a5b15c9cfba93d60a86627f04012a43f1fc0b7489020bf9f1c313d840cb62dd",
+      "bytes": 805,
+      "source_git_blob": "9d88f7d2ce0075007801f0cb498673030ca3fbf4"
+    },
+    {
+      "source": "Resources/Palettes/codexu.thousand-li-landscape/tokens/dark.json",
+      "destination": "frontend/public/aigoodbro-skins/thousand-li-landscape/tokens/dark.json",
+      "sha256": "3e57605b114a1b1aa4aca61a1a899ccbb01c76a4f60e9a376819d728c43b82f6",
+      "bytes": 1429,
+      "source_git_blob": "31469f25faa0c1a2b01178621f3c21b4d09c3490"
+    },
+    {
+      "source": "Resources/Palettes/codexu.thousand-li-landscape/tokens/light.json",
+      "destination": "frontend/public/aigoodbro-skins/thousand-li-landscape/tokens/light.json",
+      "sha256": "4b64a6f7b6e32a83e8000a062d098e28cc5b04c98c1b23a75fca7c02249d8f3f",
+      "bytes": 1429,
+      "source_git_blob": "4fee04bb7fe131daec9f63085c1c39c77101c045"
+    },
+    {
+      "source": "Sources/CodexUsageWidget/DesignSystem/WorkspaceGlass.swift",
+      "destination": "vendor/aigoodbro-skins/Sources/CodexUsageWidget/DesignSystem/WorkspaceGlass.swift",
+      "sha256": "79c340f675b35b6ec5748afa581bb7957306aa0fd77a09859ec1b0b03680c32d",
+      "bytes": 9228,
+      "source_git_blob": "1338ef6ac9266291e9098598c3798e4c50921bda"
+    },
+    {
+      "source": "Sources/CodexUsageWidget/Domain/WorkspaceGlassPreferences.swift",
+      "destination": "vendor/aigoodbro-skins/Sources/CodexUsageWidget/Domain/WorkspaceGlassPreferences.swift",
+      "sha256": "459d69b0705e954618efa161a96521e382ac84d4d683029a2e5b054eaf147012",
+      "bytes": 1500,
+      "source_git_blob": "10c2e1a049c28545e66c6a43e8b287897116badd"
+    },
+    {
+      "source": "Sources/CodexUsageWidget/UI/PaletteSettingsView.swift",
+      "destination": "vendor/aigoodbro-skins/Sources/CodexUsageWidget/UI/PaletteSettingsView.swift",
+      "sha256": "29693e8e5be2c0d625c9e45429415c7b731003b3052973e932aab12a4779be70",
+      "bytes": 18882,
+      "source_git_blob": "5c1f3c08d868f3c8c7ef128dc9b6fef1c3b44974"
+    },
+    {
+      "source": "Sources/CodexUsageWidget/UI/PaletteVisuals.swift",
+      "destination": "vendor/aigoodbro-skins/Sources/CodexUsageWidget/UI/PaletteVisuals.swift",
+      "sha256": "108b1e098cc5f1587ac6c98ee27648d3d2fd8bcd431cd1305f3d58ccfa237002",
+      "bytes": 2464,
+      "source_git_blob": "9e47b519f36374ff854af09a94ff4b2f08a5dce8"
+    },
+    {
+      "source": "Sources/CodexUsageWidget/DesignSystem/FixedVisualPalette.swift",
+      "destination": "vendor/aigoodbro-skins/Sources/CodexUsageWidget/DesignSystem/FixedVisualPalette.swift",
+      "sha256": "189e803ed0d12c743ec09ad184700dbc4238b20c702dc32ce2b94dead6b45633",
+      "bytes": 6433,
+      "source_git_blob": "66dcfa10c31c12dd9412313dce87e0d8b4010307"
+    },
+    {
+      "source": "LICENSE",
+      "destination": "vendor/aigoodbro-skins/LICENSE",
+      "sha256": "d057ec045f3d922903d83bf595d664d9d0e42ddf5694341329431dcaef0b16ef",
+      "bytes": 1067,
+      "source_git_blob": "a21bd0c45d492ffb855e0ff6d3174727c97b0bd2"
+    }
+  ]
+}

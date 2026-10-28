@@ -30,6 +30,7 @@ export function ProgressIndicator({ current, total, onStepClick }: ProgressIndic
             <React.Fragment key={step}>
               {/* Step Circle */}
               <button
+                aria-label={`第 ${step} 步${isCompleted ? '，已完成' : isActive ? '，当前步骤' : ''}`}
                 onClick={() => isClickable && onStepClick(step)}
                 disabled={!isClickable}
                 className={`relative flex items-center justify-center transition-all duration-300 ${

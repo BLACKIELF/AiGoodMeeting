@@ -1,0 +1,200 @@
+{
+  "version": "1028v2",
+  "source": "vendor/aigoodbro-skins/Sources/CodexUsageWidget/DesignSystem/WorkspaceGlass.swift",
+  "defaults": {
+    "systemGlass": true,
+    "opacity": 68,
+    "depth": 32
+  },
+  "metrics": {
+    "tintOpacity": 0.68,
+    "lineOpacity": 0.1288,
+    "controlOpacity": 0.044399999999999995,
+    "strength": 0.9039999999999999
+  },
+  "combinations": [
+    {
+      "paletteId": "default",
+      "appearance": "light",
+      "contentBackingOpacity": 0,
+      "surfaceBackingOpacity": 0,
+      "minimumForegroundContrast": 10.693941672050892,
+      "minimumMutedContrast": 4.546366155859846,
+      "minimumAccentContrast": 4.865727702428288,
+      "controlFill": "#2866F7",
+      "controlFillForeground": "#FFFFFF",
+      "controlContrast": 4.845574110725161
+    },
+    {
+      "paletteId": "default",
+      "appearance": "dark",
+      "contentBackingOpacity": 0,
+      "surfaceBackingOpacity": 0.16,
+      "minimumForegroundContrast": 8.705161469695337,
+      "minimumMutedContrast": 4.785820153884856,
+      "minimumAccentContrast": 4.6485763391746175,
+      "controlFill": "#2866F7",
+      "controlFillForeground": "#FFFFFF",
+      "controlContrast": 4.845574110725161
+    },
+    {
+      "paletteId": "liquid-keycap",
+      "appearance": "light",
+      "contentBackingOpacity": 0,
+      "surfaceBackingOpacity": 0,
+      "minimumForegroundContrast": 10.196025479017308,
+      "minimumMutedContrast": 4.525378930958661,
+      "minimumAccentContrast": 4.523550732808677,
+      "controlFill": "#2F7DE5",
+      "controlFillForeground": "#000000",
+      "controlContrast": 5.185742336263713
+    },
+    {
+      "paletteId": "liquid-keycap",
+      "appearance": "dark",
+      "contentBackingOpacity": 0.05,
+      "surfaceBackingOpacity": 0.68,
+      "minimumForegroundContrast": 4.519092026313159,
+      "minimumMutedContrast": 4.519092026313159,
+      "minimumAccentContrast": 4.56488640424319,
+      "controlFill": "#4E9AFF",
+      "controlFillForeground": "#000000",
+      "controlContrast": 7.390180705210168
+    },
+    {
+      "paletteId": "blue-white-porcelain",
+      "appearance": "light",
+      "contentBackingOpacity": 0,
+      "surfaceBackingOpacity": 0.22,
+      "minimumForegroundContrast": 8.95075629554274,
+      "minimumMutedContrast": 4.560746045778958,
+      "minimumAccentContrast": 5.030102773091715,
+      "controlFill": "#164F86",
+      "controlFillForeground": "#FFFFFF",
+      "controlContrast": 8.410922104973821
+    },
+    {
+      "paletteId": "blue-white-porcelain",
+      "appearance": "dark",
+      "contentBackingOpacity": 0.02,
+      "surfaceBackingOpacity": 0.69,
+      "minimumForegroundContrast": 4.533908451948339,
+      "minimumMutedContrast": 4.533908451948339,
+      "minimumAccentContrast": 4.618666041798138,
+      "controlFill": "#69A4D1",
+      "controlFillForeground": "#000000",
+      "controlContrast": 7.831525181478047
+    },
+    {
+      "paletteId": "dunhuang-apsara",
+      "appearance": "light",
+      "contentBackingOpacity": 0,
+      "surfaceBackingOpacity": 0.42,
+      "minimumForegroundContrast": 9.480095867537042,
+      "minimumMutedContrast": 4.552048878322634,
+      "minimumAccentContrast": 5.50243172238951,
+      "controlFill": "#2D6C6C",
+      "controlFillForeground": "#FFFFFF",
+      "controlContrast": 6.046394076009602
+    },
+    {
+      "paletteId": "dunhuang-apsara",
+      "appearance": "dark",
+      "contentBackingOpacity": 0.07,
+      "surfaceBackingOpacity": 0.68,
+      "minimumForegroundContrast": 4.511551825328052,
+      "minimumMutedContrast": 4.511551825328052,
+      "minimumAccentContrast": 4.6453401622368204,
+      "controlFill": "#6CB4AE",
+      "controlFillForeground": "#000000",
+      "controlContrast": 8.777330817307103
+    },
+    {
+      "paletteId": "forbidden-city-red",
+      "appearance": "light",
+      "contentBackingOpacity": 0,
+      "surfaceBackingOpacity": 0.48,
+      "minimumForegroundContrast": 8.898939516922772,
+      "minimumMutedContrast": 4.534343453596473,
+      "minimumAccentContrast": 4.503879007838639,
+      "controlFill": "#982F28",
+      "controlFillForeground": "#FFFFFF",
+      "controlContrast": 7.574865836624765
+    },
+    {
+      "paletteId": "forbidden-city-red",
+      "appearance": "dark",
+      "contentBackingOpacity": 0,
+      "surfaceBackingOpacity": 0.64,
+      "minimumForegroundContrast": 4.737783305757881,
+      "minimumMutedContrast": 4.52247405205108,
+      "minimumAccentContrast": 4.741832027661046,
+      "controlFill": "#D97663",
+      "controlFillForeground": "#000000",
+      "controlContrast": 6.721886583321553
+    },
+    {
+      "paletteId": "orchid-dawn",
+      "appearance": "light",
+      "contentBackingOpacity": 0,
+      "surfaceBackingOpacity": 0.4,
+      "minimumForegroundContrast": 9.347359681845768,
+      "minimumMutedContrast": 4.558731250341345,
+      "minimumAccentContrast": 5.820329169272636,
+      "controlFill": "#6A4BB1",
+      "controlFillForeground": "#FFFFFF",
+      "controlContrast": 6.45333770699964
+    },
+    {
+      "paletteId": "orchid-dawn",
+      "appearance": "dark",
+      "contentBackingOpacity": 0.08,
+      "surfaceBackingOpacity": 0.69,
+      "minimumForegroundContrast": 4.502471494441349,
+      "minimumMutedContrast": 4.502471494441349,
+      "minimumAccentContrast": 4.637969331866505,
+      "controlFill": "#B79AF4",
+      "controlFillForeground": "#000000",
+      "controlContrast": 8.942027120593803
+    },
+    {
+      "paletteId": "thousand-li-landscape",
+      "appearance": "light",
+      "contentBackingOpacity": 0,
+      "surfaceBackingOpacity": 0.36,
+      "minimumForegroundContrast": 9.250275781229883,
+      "minimumMutedContrast": 4.5113831834319,
+      "minimumAccentContrast": 6.29528404601123,
+      "controlFill": "#1F5F83",
+      "controlFillForeground": "#FFFFFF",
+      "controlContrast": 6.947009219400601
+    },
+    {
+      "paletteId": "thousand-li-landscape",
+      "appearance": "dark",
+      "contentBackingOpacity": 0.03,
+      "surfaceBackingOpacity": 0.67,
+      "minimumForegroundContrast": 4.527914251207117,
+      "minimumMutedContrast": 4.527914251207117,
+      "minimumAccentContrast": 4.612559784535863,
+      "controlFill": "#65A9CF",
+      "controlFillForeground": "#000000",
+      "controlContrast": 8.129525924765604
+    }
+  ],
+  "tests": {
+    "passed": 48,
+    "assertions": 13994,
+    "log": "tests/contexts/workspace-glass-validation-1028v2.log",
+    "localTypecheck": "0 diagnostics",
+    "cssCompile": "122321 characters, 0 warnings"
+  },
+  "adaptation": [
+    "Original source backdrop/control/edge coefficients retained.",
+    "One fixed shared backdrop pass; no native AppKit behind-window transparency.",
+    "Neutral backing applies only to text-bearing surfaces and a minimal content veil, leaving shell backdrop intact.",
+    "Readability samples 5x5 points at aspect ratios 0.8, 1.6, 2.2; not native pixel-parity validation.",
+    "Native control foreground distinction retained: saturated fill vs contrast-adjusted icon/text ink.",
+    "Filled-control foreground chooses pure black/white for at least 4.5:1 instead of the earlier dark gray candidate."
+  ]
+}

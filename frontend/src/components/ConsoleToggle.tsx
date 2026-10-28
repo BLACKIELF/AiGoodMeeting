@@ -56,10 +56,11 @@ export function ConsoleToggle() {
   }
 
   return (
-    <div className="space-y-4">
+    <details className="space-y-4">
+      <summary className="cursor-pointer text-sm font-medium">开发者日志</summary>
       <div className="flex items-center justify-between">
         <Label htmlFor="console-toggle">
-          Developer Console
+          开发者日志
         </Label>
         <Switch
           id="console-toggle"
@@ -81,12 +82,12 @@ export function ConsoleToggle() {
           onClick={handleToggleConsole}
           disabled={isLoading}
         >
-          Toggle Console
+          切换日志窗口
         </Button>
       </div>
       <p className="text-sm text-muted-foreground">
-        Show or hide the developer console window. On Windows, this controls the console window. On macOS, this opens Terminal with app logs.
+        显示或隐藏日志窗口。Windows 使用控制台，macOS 在终端中显示应用日志。
       </p>
-    </div>
+    </details>
   );
 }

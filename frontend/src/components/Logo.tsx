@@ -12,39 +12,32 @@ const Logo = React.forwardRef<HTMLButtonElement, LogoProps>(
   ({ isCollapsed }, ref) => {
     return (
       <Dialog aria-describedby={undefined}>
-        {isCollapsed ? (
-          <DialogTrigger asChild>
-            <button
-              ref={ref}
-              type="button"
-              className="flex items-center justify-center mb-2 cursor-pointer bg-transparent border-none p-0 hover:opacity-80 transition-opacity"
-              aria-label="About Meetily"
-            >
-              <Image
-                src="/logo-collapsed.png"
-                alt="Meetily"
-                width={40}
-                height={40}
-                className="object-contain"
-                priority
-              />
-            </button>
-          </DialogTrigger>
-        ) : (
-          <DialogTrigger asChild>
-            <button
-              ref={ref}
-              type="button"
-              className="w-full text-lg text-center border rounded-full bg-blue-50 border-white font-semibold text-gray-700 mb-2 block items-center cursor-pointer hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              aria-label="About Meetily"
-            >
-              <span>Meetily</span>
-            </button>
-          </DialogTrigger>
-        )}
-        <DialogContent>
+        <DialogTrigger asChild>
+          <button
+            ref={ref}
+            type="button"
+            className={`flex min-w-0 items-center gap-2.5 rounded-xl text-left transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${isCollapsed ? 'h-10 w-10 justify-center' : 'w-full p-1.5'}`}
+            aria-label="关于 AiGoodMeeting"
+          >
+            <Image
+              src="/aigoodbro-icon.png"
+              alt="AiGoodMeeting"
+              width={36}
+              height={36}
+              className="shrink-0 rounded-[10px] object-contain"
+              priority
+            />
+            {!isCollapsed && (
+              <span className="min-w-0">
+                <span className="block truncate text-[15px] font-semibold tracking-tight text-foreground">AiGoodMeeting</span>
+                <span className="block text-[11px] leading-4 text-muted-foreground">会议纪要</span>
+              </span>
+            )}
+          </button>
+        </DialogTrigger>
+        <DialogContent className="max-h-[85vh] overflow-y-auto rounded-2xl border-border bg-card text-card-foreground">
           <VisuallyHidden>
-            <DialogTitle>About Meetily</DialogTitle>
+            <DialogTitle>关于 AiGoodMeeting</DialogTitle>
           </VisuallyHidden>
           <About />
         </DialogContent>

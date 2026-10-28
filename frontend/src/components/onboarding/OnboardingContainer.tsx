@@ -53,6 +53,7 @@ export function OnboardingContainer({
               <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between pointer-events-none">
                 <button
                   onClick={handlePrevious}
+                  aria-label="上一步"
                   disabled={!canGoPrevious || step === 1}
                   className={cn(
                     'pointer-events-auto w-8 h-8 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center transition-all duration-200',
@@ -66,6 +67,7 @@ export function OnboardingContainer({
 
                 <button
                   onClick={handleNext}
+                  aria-label="下一步"
                   disabled={!canGoNext || step === totalSteps}
                   className={cn(
                     'pointer-events-auto w-8 h-8 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center transition-all duration-200',

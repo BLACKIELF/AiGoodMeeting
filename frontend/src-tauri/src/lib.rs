@@ -36,11 +36,14 @@ pub(crate) use perf_trace;
 
 // Declare audio module
 pub mod analytics;
+#[cfg(target_os = "macos")]
+mod app_menu;
 pub mod api;
 pub mod audio;
 pub mod config;
 pub mod console_utils;
 pub mod database;
+pub mod diarization;
 pub mod notifications;
 pub mod ollama;
 pub mod onboarding;
@@ -121,9 +124,9 @@ mod onnx_runtime_tests {
     }
 }
 
-// Global language preference storage (default to "auto-translate" for automatic translation to English)
+// Detect the spoken language unless the user explicitly selects translation.
 static LANGUAGE_PREFERENCE: std::sync::LazyLock<StdMutex<String>> =
-    std::sync::LazyLock::new(|| StdMutex::new("auto-translate".to_string()));
+    std::sync::LazyLock::new(|| StdMutex::new("auto".to_string()));
 
 #[derive(Debug, Deserialize)]
 struct RecordingArgs {
@@ -449,6 +452,11 @@ pub fn run() {
 
     let mut builder = tauri::Builder::default();
 
+    #[cfg(target_os = "macos")]
+    {
+        builder = builder.menu(app_menu::build);
+    }
+
     #[cfg(any(target_os = "macos", windows, target_os = "linux"))]
     {
         builder = builder.plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
@@ -739,6 +747,13 @@ pub fn run() {
             api::api_save_custom_openai_config,
             api::api_get_custom_openai_config,
             api::api_test_custom_openai_connection,
+            // Optional local speaker attribution
+            diarization::get_speaker_transcript,
+            diarization::diarize_meeting,
+            diarization::rename_speaker,
+            diarization::merge_speakers,
+            diarization::set_segment_speaker,
+            diarization::cancel_diarization,
             // Summary commands
             summary::commands::api_process_transcript,
             summary::commands::api_get_summary,
