@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
 import { MeetingSummary, SummaryProcessResponse } from '@/types';
 import { useSidebar } from '@/components/Sidebar/SidebarProvider';
 import Analytics from '@/lib/analytics';
@@ -194,15 +193,11 @@ export default function PageContent({
   }).format(meetingDate);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
+    <div
       className="agb-page flex h-dvh min-h-0 min-w-0 flex-col bg-background text-foreground"
     >
       <header className="agb-header flex shrink-0 flex-wrap items-center justify-between gap-3 px-5 py-4 md:px-6">
         <div className="min-w-0 flex-1">
-          <p className="agb-kicker mb-1 text-xs font-medium text-muted-foreground">会议记录</p>
           <h1 className="break-words text-xl font-semibold leading-snug text-foreground md:text-2xl">
             {meetingData.meetingTitle}
           </h1>
@@ -281,6 +276,6 @@ export default function PageContent({
           }
         />
       </div>
-    </motion.div>
+    </div>
   );
 }

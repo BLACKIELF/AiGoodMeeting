@@ -552,3 +552,73 @@ html.dark .hover\:bg-white:hover { background-color: hsl(var(--card)); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
+
+/* One card column and one expanded panel, shared by every workspace. */
+:root { --agb-motion-out: cubic-bezier(0.23, 1, 0.32, 1); }
+.agb-card-workspace {
+  container-type: inline-size;
+  display: flex; flex: 1; min-height: 0; min-width: 0; width: 100%;
+}
+.agb-card-layout {
+  display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr);
+  gap: 1rem; flex: 1; min-height: 0; min-width: 0;
+}
+:root .agb-workspace-card-list {
+  display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start;
+  gap: .625rem; height: auto; max-height: 11rem; min-width: 0; overflow-y: auto;
+  background: transparent; padding: 2px; border-radius: 0;
+}
+:root .agb-workspace-card {
+  display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start;
+  gap: .375rem; flex-shrink: 0; min-width: 0; white-space: normal;
+  border: 1px solid hsl(var(--border)); border-radius: 14px; padding: .75rem 1rem;
+  color: hsl(var(--foreground)); text-align: left;
+  transition: background-color 160ms ease, border-color 160ms ease, transform 120ms var(--agb-motion-out);
+}
+:root .agb-workspace-card[data-state="active"] {
+  border-color: hsl(var(--primary) / .65); color: hsl(var(--foreground));
+}
+.agb-workspace-card-top { display: flex; align-items: center; gap: .625rem; min-width: 0; }
+.agb-workspace-card-title { flex: 1; font-size: .9375rem; line-height: 1.5; font-weight: 600; overflow-wrap: anywhere; }
+.agb-workspace-card-description { display: none; font-size: .75rem; line-height: 1.65; font-weight: 400; color: hsl(var(--muted-foreground)); }
+.agb-workspace-card-meta { font-size: .6875rem; line-height: 1.5; font-weight: 500; color: hsl(var(--primary)); }
+.agb-workspace-card-chevron { transition: transform 200ms var(--agb-motion-out); }
+.agb-workspace-card[data-state="active"] .agb-workspace-card-chevron { transform: rotate(90deg); }
+.agb-card-content-column { position: relative; display: flex; min-width: 0; min-height: 0; }
+:root .agb-workspace-panel {
+  display: flex; flex: 1; min-width: 0; min-height: 0; margin: 0;
+  border-radius: 16px; border: 1px solid hsl(var(--border)); overflow: hidden;
+}
+:root .agb-workspace-panel[hidden] { display: none !important; }
+.agb-card-reveal { display: flex; flex: 1; flex-direction: column; min-height: 0; min-width: 0; overflow: auto; }
+.agb-card-reveal > * { flex-shrink: 0; }
+.agb-card-reveal > .h-full { flex: 1; min-height: 0; }
+.agb-card-workspace:is([data-workspace="settings"], [data-workspace="setting-dialog"]) .agb-card-reveal { padding: clamp(1rem, 2cqi, 1.5rem); }
+:root .agb-meeting-card {
+  margin: 0 0 .625rem; overflow: hidden; border: 1px solid hsl(var(--border)); border-radius: 14px;
+  background: hsl(var(--card) / .6);
+  transition: border-color 160ms ease, background-color 160ms ease, transform 120ms var(--agb-motion-out);
+}
+:root .agb-meeting-card[data-active="true"] { border-color: hsl(var(--primary) / .6); background: hsl(var(--accent)); }
+.agb-meeting-card-tools {
+  display: grid; grid-template-rows: 0fr; opacity: 0; visibility: hidden;
+  transition: grid-template-rows 200ms var(--agb-motion-out), opacity 160ms ease, visibility 200ms;
+}
+.agb-meeting-card-tools[data-open="true"] { grid-template-rows: 1fr; opacity: 1; visibility: visible; }
+@container (min-width: 680px) {
+  .agb-card-layout { grid-template-columns: 13rem minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 1.25rem; }
+  :root .agb-workspace-card-list { max-height: none; }
+  :root .agb-workspace-card { gap: .625rem; padding: 1rem; }
+  .agb-workspace-card-description { display: block; }
+}
+@container (min-width: 1100px) {
+  .agb-card-layout { grid-template-columns: 15rem minmax(0, 1fr); }
+}
+@media (hover: hover) and (pointer: fine) {
+  :root .agb-workspace-card:hover, :root .agb-meeting-card:hover { border-color: hsl(var(--primary) / .5); transform: translateY(-1px); }
+  :root .agb-workspace-card[data-state="active"], :root .agb-meeting-card[data-active="true"] { transform: none; }
+}
+[data-motion="reduced"] .agb-workspace-card, [data-motion="reduced"] .agb-workspace-card-chevron { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  :root .agb-workspace-card, :root .agb-meeting-card, .agb-workspace-card-chevron { transform: none !important; }
+}

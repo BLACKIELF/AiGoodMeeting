@@ -1,5 +1,5 @@
 {
-  "productName": "AiGoodMeeting 1028v3",
+  "productName": "AiGoodMeeting 1028v4",
   "identifier": "com.meetily.local-speakers",
   "build": {
     "beforeBuildCommand": "node node_modules/next/dist/bin/next build"

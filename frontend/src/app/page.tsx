@@ -21,6 +21,8 @@ import { TranscriptRecovery } from '@/components/TranscriptRecovery';
 import { indexedDBService } from '@/services/indexedDBService';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { WorkbenchCards } from '@/components/WorkbenchCards';
+import { PermissionWarning } from '@/components/PermissionWarning';
 
 export default function Home() {
   // Local page state (not moved to contexts)
@@ -29,15 +31,15 @@ export default function Home() {
   const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
 
   // Use contexts for state management
-  const { meetingTitle } = useTranscripts();
-  const { transcriptModelConfig, selectedDevices } = useConfig();
+  const { meetingTitle, transcripts } = useTranscripts();
+  const { transcriptModelConfig, selectedDevices, betaFeatures } = useConfig();
   const recordingState = useRecordingState();
 
   // Extract status from global state
   const { status, isStopping, isProcessing, isSaving } = recordingState;
 
   // Hooks
-  const { hasMicrophone } = usePermissionCheck();
+  const { hasMicrophone, hasSystemAudio, isChecking, checkPermissions } = usePermissionCheck();
   const { setIsMeetingActive, isCollapsed: sidebarCollapsed, refetchMeetings } = useSidebar();
   const { modals, messages, showModal, hideModal } = useModalState(transcriptModelConfig);
   const { isRecordingDisabled, setIsRecordingDisabled } = useRecordingStateSync(isRecording, setIsRecordingState, setIsMeetingActive);
@@ -188,9 +190,17 @@ export default function Home() {
 
   // Computed values using global status
   const isProcessingStop = status === RecordingStatus.PROCESSING_TRANSCRIPTS || isProcessing;
+  const recordingStatus = isSaving ? '正在保存会议…'
+    : isProcessingStop ? '正在完成转写…'
+      : isStopping ? '正在停止录音…'
+        : status === RecordingStatus.STARTING ? '正在准备录音…'
+          : recordingState.isRecording ? (recordingState.isPaused ? '录音已暂停' : '正在录音')
+            : isChecking ? '正在检查录音设备…'
+              : status === RecordingStatus.ERROR ? toUserMessage(recordingState.statusMessage, '录音未完成，请检查设备后重试。')
+                : !hasMicrophone ? '请先检查麦克风权限。' : '点击下方“开始录音”即可开始。';
 
   return (
-    <div className="agb-page flex h-screen min-w-0 flex-col bg-background text-foreground">
+    <div className="agb-page flex h-dvh min-w-0 flex-col bg-background text-foreground">
       {/* All Modals supported*/}
       <SettingsModals
         modals={modals}
@@ -207,46 +217,47 @@ export default function Home() {
         onDelete={deleteRecoverableMeeting}
         onLoadPreview={loadMeetingTranscripts}
       />
-      <div className="flex flex-1 overflow-hidden">
-        <TranscriptPanel
-          isProcessingStop={isProcessingStop}
-          isStopping={isStopping}
-          showModal={showModal}
-        />
-
-        {/* Recording controls - only show when permissions are granted or already recording and not showing status messages */}
-        {(hasMicrophone || isRecording) &&
-          status !== RecordingStatus.PROCESSING_TRANSCRIPTS &&
-          status !== RecordingStatus.SAVING && (
-            <div className="pointer-events-none fixed bottom-6 left-0 right-0 z-10">
-              <div
-                className="flex justify-center px-4 transition-[margin] duration-200 motion-reduce:transition-none"
-                style={{
-                  marginLeft: sidebarCollapsed ? '4rem' : '16rem'
-                }}
-              >
-                <div className="flex w-full max-w-[750px] justify-center">
-                  <div className="pointer-events-auto flex min-w-0 items-center">
-                    <RecordingControls
-                      isRecording={recordingState.isRecording}
-                      onRecordingStop={(callApi = true) => handleRecordingStop(callApi)}
-                      onRecordingStart={handleRecordingStart}
-                      onTranscriptReceived={() => { }} // Not actually used by RecordingControls
-                      onStopInitiated={() => setIsStopping(true)}
-                      barHeights={barHeights}
-                      onTranscriptionError={(message) => {
-                        showModal('errorAlert', message);
-                      }}
-                      isRecordingDisabled={isRecordingDisabled}
-                      isParentProcessing={isProcessingStop}
-                      selectedDevices={selectedDevices}
-                      meetingName={meetingTitle}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        <WorkbenchCards
+          meetingTitle={meetingTitle}
+          transcriptCount={transcripts.length}
+          isRecording={recordingState.isRecording}
+          isPaused={recordingState.isPaused}
+          recordingStatus={recordingStatus}
+          canImport={betaFeatures.importAndRetranscribe}
+          permissionWarning={!recordingState.isRecording && !isChecking && (
+            <PermissionWarning
+              hasMicrophone={hasMicrophone}
+              hasSystemAudio={hasSystemAudio}
+              onRecheck={checkPermissions}
+              isRechecking={isChecking}
+            />
           )}
+          transcript={<TranscriptPanel
+            isProcessingStop={isProcessingStop}
+            isStopping={isStopping}
+            showModal={showModal}
+          />}
+          recordingControls={(hasMicrophone || isRecording || recordingState.isRecording) &&
+            status !== RecordingStatus.PROCESSING_TRANSCRIPTS &&
+            status !== RecordingStatus.SAVING && (
+              <RecordingControls
+                isRecording={recordingState.isRecording}
+                onRecordingStop={(callApi = true) => handleRecordingStop(callApi)}
+                onRecordingStart={handleRecordingStart}
+                onTranscriptReceived={() => { }} // Not actually used by RecordingControls
+                onStopInitiated={() => setIsStopping(true)}
+                barHeights={barHeights}
+                onTranscriptionError={(message) => {
+                  showModal('errorAlert', message);
+                }}
+                isRecordingDisabled={isRecordingDisabled}
+                isParentProcessing={isProcessingStop}
+                selectedDevices={selectedDevices}
+                meetingName={meetingTitle}
+              />
+            )}
+        />
 
         {/* Status Overlays - Processing and Saving */}
         <StatusOverlays
