@@ -14,7 +14,7 @@
 
 ## 安装
 
-下载对应发行版中的 `AiGoodMeeting-1028v3-arm64.zip` 和 `SHA256SUMS-1028v3.txt`，先比对哈希再解压。应用采用本地签名，**未经 Apple 公证**；按 macOS 正常打开流程处理，不需要关闭系统安全保护。
+下载对应发行版中的 `AiGoodMeeting-1028v3-arm64.zip` 、`AiGoodMeeting-source-1028v3.tar.gz` 和 `SHA256SUMS-1028v3.txt`，先比对哈希再解压。应用采用本地签名，**未经 Apple 公证**；按 macOS 正常打开流程处理，不需要关闭系统安全保护。
 
 应用包不包含模型与分人 Python 环境。第一次安装还需以下本地组件，可复用已有文件：
 
