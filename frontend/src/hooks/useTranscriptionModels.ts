@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 
 export interface RawModelInfo {
@@ -41,7 +41,15 @@ export function useTranscriptionModels(transcriptModelConfig: TranscriptModelCon
     setSelectedModelKey(key);
   }, []);
 
+  const mountedRef = useRef(false);
+  const requestRef = useRef(0);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; requestRef.current += 1; };
+  }, [transcriptModelConfig]);
+
   const fetchModels = useCallback(async () => {
+    const request = ++requestRef.current;
     setLoadingModels(true);
     const allModels: ModelOption[] = [];
 
@@ -77,6 +85,7 @@ export function useTranscriptionModels(transcriptModelConfig: TranscriptModelCon
       console.error('Failed to fetch Parakeet models:', err);
     }
 
+    if (!mountedRef.current || request !== requestRef.current) return;
     setAvailableModels(allModels);
 
     // Set default model based on user's saved configuration

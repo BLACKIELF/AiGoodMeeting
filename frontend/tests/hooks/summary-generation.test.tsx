@@ -287,4 +287,38 @@ describe('summary state restored when returning to a meeting', () => {
     expect(state.summaryStatus).toBe('completed');
     expect(text()).toContain('Finished summary');
   });
+  test('a transcript preflight returning after the meeting changes cannot start generation', async () => {
+    await show(response({ status: 'idle', start: null }));
+    let resolve!: (value: unknown) => void;
+    invoke.mockImplementationOnce(() => new Promise(done => { resolve = done; }));
+    let generation!: Promise<void>;
+    await act(async () => { generation = state.handleGenerateSummary(); });
+    await show(response({ meeting_id: 'meeting-b', status: 'idle', start: null }), 'meeting-b');
+    await act(async () => {
+      resolve({ transcripts: [{ text: 'Old meeting', timestamp: '00:00' }], total_count: 1 });
+      await generation;
+    });
+    expect(invoke.mock.calls.filter(([command]) => command === 'api_process_transcript')).toEqual([]);
+    expect(state.summaryStatus).toBe('idle');
+    expect(notify).not.toHaveBeenCalled();
+  });
+
+  test('A to B to A navigation cannot revive the first preflight', async () => {
+    const view = (id: string) => <SidebarProvider><Status meetingId={id}
+      initialSummary={response({ meeting_id: id, status: 'idle', start: null })} /></SidebarProvider>;
+    await act(async () => { renderer = create(view('meeting-a')); });
+    let resolve!: (value: unknown) => void;
+    invoke.mockImplementationOnce(() => new Promise(done => { resolve = done; }));
+    let generation!: Promise<void>;
+    await act(async () => { generation = state.handleGenerateSummary(); });
+    await act(async () => renderer.update(view('meeting-b')));
+    await act(async () => renderer.update(view('meeting-a')));
+    await act(async () => {
+      resolve({ transcripts: [{ text: 'Stale first visit', timestamp: '00:00' }], total_count: 1 });
+      await generation;
+    });
+    expect(invoke.mock.calls.filter(([command]) => command === 'api_process_transcript')).toEqual([]);
+    expect(state.summaryStatus).toBe('idle');
+  });
+
 });

@@ -89,7 +89,12 @@ class IndexedDBService {
       }
     });
 
-    return this.initPromise;
+    try {
+      await this.initPromise;
+    } catch (error) {
+      this.initPromise = null;
+      throw error;
+    }
   }
 
   // Meeting operations
@@ -125,7 +130,7 @@ class IndexedDBService {
       const transaction = this.db!.transaction(['meetings'], 'readonly');
       const store = transaction.objectStore('meetings');
 
-      return new Promise((resolve, reject) => {
+      return await new Promise((resolve, reject) => {
         const request = store.get(meetingId);
         request.onsuccess = () => resolve(request.result || null);
         request.onerror = () => reject(request.error);
@@ -146,7 +151,7 @@ class IndexedDBService {
       const transaction = this.db!.transaction(['meetings'], 'readonly');
       const store = transaction.objectStore('meetings');
 
-      return new Promise((resolve, reject) => {
+      return await new Promise((resolve, reject) => {
         const request = store.getAll();
         request.onsuccess = () => {
           const allMeetings = request.result as MeetingMetadata[];
@@ -175,7 +180,7 @@ class IndexedDBService {
       const transaction = this.db!.transaction(['meetings'], 'readwrite');
       const store = transaction.objectStore('meetings');
 
-      return new Promise((resolve, reject) => {
+      return await new Promise((resolve, reject) => {
         const getRequest = store.get(meetingId);
         getRequest.onsuccess = () => {
           const meeting = getRequest.result;
@@ -281,7 +286,7 @@ class IndexedDBService {
       const store = transaction.objectStore('transcripts');
       const index = store.index('meetingId');
 
-      return new Promise((resolve, reject) => {
+      return await new Promise((resolve, reject) => {
         const request = index.getAll(meetingId);
         request.onsuccess = () => {
           const transcripts = request.result as StoredTranscript[];
@@ -308,7 +313,7 @@ class IndexedDBService {
       const store = transaction.objectStore('transcripts');
       const index = store.index('meetingId');
 
-      return new Promise((resolve, reject) => {
+      return await new Promise((resolve, reject) => {
         const request = index.count(meetingId);
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error);
@@ -360,7 +365,6 @@ class IndexedDBService {
         }
       }
 
-      console.log(`Cleaned up ${deletedCount} old meetings`);
       return deletedCount;
     } catch (error) {
       console.error('Failed to delete old meetings:', error);
@@ -410,7 +414,6 @@ class IndexedDBService {
         }
       }
 
-      console.log(`Cleaned up ${deletedCount} saved meetings`);
       return deletedCount;
     } catch (error) {
       console.error('Failed to delete saved meetings:', error);

@@ -22,6 +22,7 @@ export function useTemplates() {
 
   // Fetch available templates on mount
   useEffect(() => {
+    let cancelled = false;
     const fetchTemplates = async () => {
       try {
         const templates = await invokeTauri('api_list_templates') as Array<{
@@ -29,13 +30,14 @@ export function useTemplates() {
           name: string;
           description: string;
         }>;
-        console.log('Available templates:', templates);
+        if (cancelled) return;
         setAvailableTemplates(templates.map(template => ({ ...template, ...TEMPLATE_LABELS[template.id] })));
       } catch (error) {
         console.error('Failed to fetch templates:', error);
       }
     };
     fetchTemplates();
+    return () => { cancelled = true; };
   }, []);
 
   // Handle template selection
@@ -44,7 +46,7 @@ export function useTemplates() {
     toast.success('已选择纪要模板', {
       description: `使用「${templateName}」整理纪要`,
     });
-    Analytics.trackFeatureUsed('template_selected');
+    void Analytics.trackFeatureUsed('template_selected').catch(error => console.error('Failed to track template selection:', error));
   }, []);
 
   return {

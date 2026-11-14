@@ -11,6 +11,7 @@ use crate::summary::language_detection::{
     detect_summary_language, SummaryLanguageDetection,
 };
 use crate::summary::processor::{clean_llm_markdown_detailed, contains_reasoning_marker};
+use crate::summary::plain_text::sanitize_summary_text;
 use crate::summary::service::SummaryService;
 use log::{error as log_error, info as log_info, warn as log_warn};
 use chrono::{DateTime, Duration, SecondsFormat, Utc};
@@ -103,6 +104,7 @@ pub async fn api_save_meeting_summary<R: Runtime>(
         "api_save_meeting_summary (native) called for meeting_id: {}",
         meeting_id
     );
+    sanitize_summary_text(&mut summary);
     if !summary_is_renderable(&summary) {
         return Err("Summary contains no visible content or model reasoning markers and was not saved.".into());
     }
@@ -359,6 +361,7 @@ fn redact_flagged_reasoning(mut result: serde_json::Value) -> serde_json::Value 
     if reasoning_stripped {
         object.insert("reasoning_stripped".to_string(), serde_json::Value::Bool(true));
     }
+    sanitize_summary_text(&mut result);
     result
 }
 
@@ -671,6 +674,19 @@ mod tests {
         assert!(summary_is_renderable(&json!({
             "summary_json": [{"content": [{"type": "text", "text": "Visible"}]}]
         })));
+    }
+
+    #[test]
+    fn summary_response_cleans_legacy_blocks_and_cached_markdown() {
+        let redacted = redact_flagged_reasoning(json!({
+            "markdown": "# 纪要\n**结论**",
+            "english_cache": {"markdown":"## Decision\n- Ship"},
+            "summary_json":[{"id":"block#1", "content":[{"text":"`正文`"}]}]
+        }));
+        assert_eq!(redacted["markdown"], "纪要\n结论");
+        assert_eq!(redacted["english_cache"]["markdown"], "Decision\nShip");
+        assert_eq!(redacted["summary_json"][0]["content"][0]["text"], "正文");
+        assert_eq!(redacted["summary_json"][0]["id"], "block#1");
     }
 
     #[test]

@@ -162,9 +162,9 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   const [isAutoSummary, setisAutoSummary] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('isAutoSummary');
-      return saved !== null ? saved === 'true' : false
+      return saved === null || saved === 'true';
     }
-    return false;
+    return true;
   });
 
   // Beta features state (localStorage)
@@ -179,20 +179,31 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   const preferencesLoadedRef = useRef(false);
   const isLoadingRef = useRef(false);
 
+  const mountedRef = useRef(false);
+  const modelConfigVersionRef = useRef(0);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
   // Load Ollama models (uses saved endpoint, re-runs when endpoint changes after config load)
   useEffect(() => {
+    let cancelled = false;
     const loadModels = async () => {
       try {
         const endpoint = modelConfig.ollamaEndpoint || null;
         const modelList = await invoke<OllamaModel[]>('get_ollama_models', { endpoint });
+        if (cancelled) return;
         setModels(modelList);
         setError('');
       } catch (err) {
+        if (cancelled) return;
         setError(toUserMessage(err, '无法读取模型，请检查 Ollama 是否已启动。'));
         console.error('Error loading models:', err);
       }
     };
     loadModels();
+    return () => { cancelled = true; };
   }, [modelConfig.ollamaEndpoint]);
 
   // Load transcript configuration on mount
@@ -200,8 +211,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     const loadTranscriptConfig = async () => {
       try {
         const config = await configService.getTranscriptConfig();
-        if (config) {
-          console.log('[ConfigContext] Loaded saved transcript config:', config);
+        if (config && mountedRef.current) {
           setTranscriptModelConfig({
             provider: config.provider || 'parakeet',
             model: config.model || 'parakeet-tdt-0.6b-v3-int8',
@@ -219,9 +229,6 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (selectedLanguage) {
       invoke('set_language_preference', { language: selectedLanguage })
-        .then(() => {
-          console.log('[ConfigContext] Synced language preference to Rust on startup:', selectedLanguage);
-        })
         .catch(err => {
           console.error('[ConfigContext] Failed to sync language preference to Rust on startup:', err);
         });
@@ -230,20 +237,19 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
 
   // Load model configuration on mount
   useEffect(() => {
+    const version = modelConfigVersionRef.current;
     const fetchModelConfig = async () => {
       try {
         const data = await configService.getModelConfig();
+        if (!mountedRef.current || version !== modelConfigVersionRef.current) return;
         if (data && data.provider) {
           // If provider is custom-openai, fetch the additional config
           if (data.provider === 'custom-openai') {
             try {
               const customConfig = await configService.getCustomOpenAIConfig();
+              if (!mountedRef.current || version !== modelConfigVersionRef.current) return;
               if (customConfig) {
                 // Merge custom config fields into modelConfig
-                console.log('[ConfigContext] Loading custom OpenAI config:', {
-                  endpoint: customConfig.endpoint,
-                  model: customConfig.model,
-                });
                 const resolvedModel = customConfig.model || data.model || '';
                 setModelConfig(prev => ({
                   ...prev,
@@ -272,6 +278,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
             }
           }
 
+          if (!mountedRef.current || version !== modelConfigVersionRef.current) return;
           // For non-custom-openai providers, just set base config
           setModelConfig(prev => ({
             ...prev,
@@ -291,7 +298,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.error('Failed to fetch saved model config in ConfigContext:', error);
       } finally {
-        setIsModelConfigLoading(false);
+        if (mountedRef.current) setIsModelConfigLoading(false);
       }
     };
     fetchModelConfig();
@@ -309,13 +316,13 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
           )
         );
 
+        if (!mountedRef.current) return;
         setProviderApiKeys({
           claude: keys[0],
           groq: keys[1],
           openai: keys[2],
           openrouter: keys[3],
         });
-        console.log('[ConfigContext] Loaded provider API keys');
       } catch (error) {
         console.error('[ConfigContext] Failed to load provider API keys:', error);
       }
@@ -326,10 +333,12 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
 
   // Listen for model config updates from other components
   useEffect(() => {
+    let disposed = false;
     const setupListener = async () => {
       const { listen } = await import('@tauri-apps/api/event');
       const unlisten = await listen<ModelConfig>('model-config-updated', (event) => {
-        console.log('[ConfigContext] Received model-config-updated event:', event.payload);
+        if (disposed) return;
+        modelConfigVersionRef.current += 1;
         setModelConfig(event.payload);
 
         // Update provider-specific key when config changes
@@ -341,9 +350,11 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     };
 
     let cleanup: (() => void) | undefined;
-    setupListener().then(fn => cleanup = fn);
+    void setupListener().then(fn => { if (disposed) fn(); else cleanup = fn; })
+      .catch(error => console.error('Failed to setup config listener:', error));
 
     return () => {
+      disposed = true;
       cleanup?.();
     };
   }, []);
@@ -353,15 +364,13 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     const loadDevicePreferences = async () => {
       try {
         const prefs = await configService.getRecordingPreferences();
-        if (prefs && (prefs.preferred_mic_device || prefs.preferred_system_device)) {
+        if (mountedRef.current && prefs && (prefs.preferred_mic_device || prefs.preferred_system_device)) {
           setSelectedDevices({
             micDevice: prefs.preferred_mic_device,
             systemDevice: prefs.preferred_system_device
           });
-          console.log('Loaded device preferences:', prefs);
         }
       } catch (error) {
-        console.log('No device preferences found or failed to load:', error);
       }
     };
     loadDevicePreferences();
@@ -435,11 +444,11 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
       let settings: NotificationSettings | null = null;
       try {
         settings = await invoke<NotificationSettings>('get_notification_settings');
-        setNotificationSettings(settings);
+        if (mountedRef.current) setNotificationSettings(settings);
       } catch (notifError) {
         console.error('[ConfigContext] Failed to load notification settings:', notifError);
         // Use default values if notification settings fail to load
-        setNotificationSettings(null);
+        if (mountedRef.current) setNotificationSettings(null);
       }
 
       // Load storage locations
@@ -449,6 +458,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
         invoke<string>('get_default_recordings_folder_path')
       ]);
 
+      if (!mountedRef.current) return;
       setStorageLocations({
         database: dbDir,
         models: modelsDir,
@@ -461,7 +471,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
       console.error('[ConfigContext] Failed to load preferences:', error);
     } finally {
       isLoadingRef.current = false;
-      setIsLoadingPreferences(false);
+      if (mountedRef.current) setIsLoadingPreferences(false);
     }
   }, []);
 
@@ -469,7 +479,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   const updateNotificationSettings = useCallback(async (settings: NotificationSettings) => {
     try {
       await invoke('set_notification_settings', { settings });
-      setNotificationSettings(settings);
+      if (mountedRef.current) setNotificationSettings(settings);
     } catch (error) {
       console.error('[ConfigContext] Failed to update notification settings:', error);
       throw error; // Re-throw so component can handle error

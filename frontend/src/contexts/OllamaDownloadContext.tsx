@@ -43,7 +43,7 @@ export function OllamaDownloadProvider({ children }: { children: React.ReactNode
    * These persist for the lifetime of the app, unlike modal-scoped listeners
    */
   useEffect(() => {
-    console.log('[OllamaDownloadContext] Setting up event listeners');
+    let disposed = false;
     const unsubscribers: (() => void)[] = [];
 
     const setupListeners = async () => {
@@ -52,8 +52,8 @@ export function OllamaDownloadProvider({ children }: { children: React.ReactNode
         const unlistenProgress = await listen<{ modelName: string; progress: number }>(
           'ollama-model-download-progress',
           (event) => {
+            if (disposed) return;
             const { modelName, progress } = event.payload;
-            console.log(`🔵 [OllamaDownloadContext] Progress for ${modelName}: ${progress}%`);
 
             setDownloadProgress(prev => {
               const newProgress = new Map(prev);
@@ -70,14 +70,15 @@ export function OllamaDownloadProvider({ children }: { children: React.ReactNode
             });
           }
         );
+        if (disposed) { unlistenProgress(); return; }
         unsubscribers.push(unlistenProgress);
 
         // Download complete
         const unlistenComplete = await listen<{ modelName: string }>(
           'ollama-model-download-complete',
           (event) => {
+            if (disposed) return;
             const { modelName } = event.payload;
-            console.log(`✅ [OllamaDownloadContext] Download complete for ${modelName}`);
 
             toast.success(`模型 ${modelName} 已下载`, {
               description: '模型已就绪，可以使用。',
@@ -98,14 +99,16 @@ export function OllamaDownloadProvider({ children }: { children: React.ReactNode
             });
           }
         );
+        if (disposed) { unlistenComplete(); return; }
         unsubscribers.push(unlistenComplete);
 
         // Download error
         const unlistenError = await listen<{ modelName: string; error: string }>(
           'ollama-model-download-error',
           (event) => {
+            if (disposed) return;
             const { modelName, error } = event.payload;
-            console.error(`❌ [OllamaDownloadContext] Download error for ${modelName}:`, error);
+            console.error(`[OllamaDownloadContext] Download error for ${modelName}:`, error);
 
             toast.error(`${modelName} 下载失败`, {
               description: toUserMessage(error, "模型下载失败，请检查连接后重试。"),
@@ -126,10 +129,11 @@ export function OllamaDownloadProvider({ children }: { children: React.ReactNode
             });
           }
         );
+        if (disposed) { unlistenError(); return; }
         unsubscribers.push(unlistenError);
 
-        console.log('[OllamaDownloadContext] Event listeners set up successfully');
       } catch (error) {
+        unsubscribers.splice(0).forEach(unsub => unsub());
         console.error('[OllamaDownloadContext] Failed to set up event listeners:', error);
       }
     };
@@ -137,7 +141,7 @@ export function OllamaDownloadProvider({ children }: { children: React.ReactNode
     setupListeners();
 
     return () => {
-      console.log('[OllamaDownloadContext] Cleaning up event listeners');
+      disposed = true;
       unsubscribers.forEach(unsub => unsub());
     };
   }, []);

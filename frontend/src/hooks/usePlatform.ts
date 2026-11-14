@@ -35,6 +35,7 @@ export function usePlatform(): Platform {
   const [currentPlatform, setCurrentPlatform] = useState<Platform>(() => detectPlatformFromUserAgent());
 
   useEffect(() => {
+    let cancelled = false;
     async function detectPlatform() {
       // Check if Tauri is available
       if (typeof window === 'undefined' || !window.__TAURI_INTERNALS__) {
@@ -47,6 +48,8 @@ export function usePlatform(): Platform {
         // Dynamically import to avoid SSR issues
         const { platform } = await import('@tauri-apps/plugin-os');
         const platformName = await platform();
+
+        if (cancelled) return;
 
         // Map Tauri's platform names to our simplified types
         switch (platformName) {
@@ -66,11 +69,12 @@ export function usePlatform(): Platform {
         }
       } catch (error) {
         console.warn('[usePlatform] Tauri platform detection failed, using user agent:', error);
-        setCurrentPlatform(detectPlatformFromUserAgent());
+        if (!cancelled) setCurrentPlatform(detectPlatformFromUserAgent());
       }
     }
 
     detectPlatform();
+    return () => { cancelled = true; };
   }, []);
 
   return currentPlatform;

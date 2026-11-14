@@ -38,7 +38,7 @@ export function About() {
         <div>
           <h1 className="text-xl font-semibold tracking-tight">AiGoodMeeting</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">会议纪要</p>
-          <p className="mt-1 text-xs tabular-nums text-muted-foreground">1028v4 · Meetily {currentVersion}</p>
+          <p className="mt-1 text-xs tabular-nums text-muted-foreground">1113v1 · Meetily {currentVersion}</p>
         </div>
       </div>
 

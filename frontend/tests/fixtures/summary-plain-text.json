@@ -1,0 +1,42 @@
+[
+  {
+    "name": "headings_emphasis_bullets_and_quotes",
+    "input": "# 会议纪要\n## 关键决策\n- **确定上线时间**：本周五\n- *负责人*：张伟\n---\n> 备注：`v1.2` 已冻结",
+    "output": "会议纪要\n关键决策\n确定上线时间：本周五\n负责人：张伟\n\n备注：v1.2 已冻结"
+  },
+  {
+    "name": "chinese_compact_headings_and_numbered_items",
+    "input": "###一、项目背景\n###1. **桌面端升级**\n1. 完成纯文本清理\n2. 默认导出 TXT 与 Word",
+    "output": "一、项目背景\n1. 桌面端升级\n1. 完成纯文本清理\n2. 默认导出 TXT 与 Word"
+  },
+  {
+    "name": "preserves_csharp_urls_filenames_and_math",
+    "input": "技术栈保留 C# 与 F#，问题单 #42 详见 https://example.com/docs#section，文件 summary_v2_final.docx，计算 2 * 3 = 6",
+    "output": "技术栈保留 C# 与 F#，问题单 #42 详见 https://example.com/docs#section，文件 summary_v2_final.docx，计算 2 * 3 = 6"
+  },
+  {
+    "name": "tasks_emojis_and_links",
+    "input": "- [x] 完成接口联调\n- [ ] 归档测试报告\n🎯 **核心目标**：查看 [飞书文档](https://feishu.cn/docx/abc) 获取详情",
+    "output": "已完成：完成接口联调\n待办：归档测试报告\n核心目标：查看 飞书文档（https://feishu.cn/docx/abc） 获取详情"
+  },
+  {
+    "name": "markdown_table_to_tab_rows",
+    "input": "| 事项 | 负责人 |\n| --- | --- |\n| **接口升级** | `李明` |",
+    "output": "事项\t负责人\n\n接口升级\t李明"
+  },
+  {
+    "name": "asterisk_emphasis_touching_chinese",
+    "input": "本周*重点*是交付，*风险*需要跟进",
+    "output": "本周重点是交付，风险需要跟进"
+  },
+  {
+    "name": "table_without_side_borders",
+    "input": "事项 | 负责人 | 期限\n--- | --- | ---\n接口升级 | 李明 | 周五",
+    "output": "事项\t负责人\t期限\n\n接口升级\t李明\t周五"
+  },
+  {
+    "name": "inline_heading_marks",
+    "input": "结论 ## 下一步\n保留 C# 与 #42",
+    "output": "结论 下一步\n保留 C# 与 #42"
+  }
+]

@@ -127,8 +127,8 @@ export function SummaryModelSettings({ refetchTrigger }: SummaryModelSettingsPro
       <div className="bg-card rounded-lg border border-border p-6 shadow-sm">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">自动生成纪要</h3>
-            <p className="text-sm text-muted-foreground">停止录音后自动整理会议纪要</p>
+            <h3 className="text-lg font-semibold text-foreground mb-2">自动生成主题和摘要</h3>
+            <p className="text-sm text-muted-foreground">录音保存或导入音频后，根据转写生成会议主题和纪要</p>
           </div>
           <Switch checked={isAutoSummary} onCheckedChange={toggleIsAutoSummary} />
         </div>

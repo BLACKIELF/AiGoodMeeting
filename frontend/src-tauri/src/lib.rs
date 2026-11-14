@@ -44,6 +44,7 @@ pub mod config;
 pub mod console_utils;
 pub mod database;
 pub mod diarization;
+pub mod feishu;
 pub mod notifications;
 pub mod ollama;
 pub mod onboarding;
@@ -845,6 +846,12 @@ pub fn run() {
             audio::import::start_import_audio_command,
             audio::import::cancel_import_command,
             audio::import::is_import_in_progress_command,
+            // Document export & Feishu CLI commands
+            feishu::feishu_get_config,
+            feishu::feishu_save_config,
+            feishu::feishu_check_status,
+            feishu::feishu_upload_document,
+            feishu::export_meeting_document,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

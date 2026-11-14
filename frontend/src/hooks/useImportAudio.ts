@@ -73,6 +73,13 @@ export function useImportAudio({
   useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
   useEffect(() => { onErrorRef.current = onError; }, [onError]);
 
+  const mountedRef = useRef(false);
+  const operationRef = useRef(0);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; operationRef.current += 1; };
+  }, []);
+
   // Cancellation guard: prevents late events from updating state after cancel
   const isCancelledRef = useRef(false);
 
@@ -86,7 +93,7 @@ export function useImportAudio({
       const unlistenProgress = await listen<ImportProgress>(
         'import-progress',
         (event) => {
-          if (isCancelledRef.current) return;
+          if (cleanedUpRef.current || isCancelledRef.current) return;
           setProgress(event.payload);
           setStatus('processing');
         }
@@ -100,26 +107,31 @@ export function useImportAudio({
       // Completion event
       const unlistenComplete = await listen<ImportResult>(
         'import-complete',
-        async (event) => {
-          if (isCancelledRef.current) return;
+        (event) => {
+          void (async () => {
+            if (cleanedUpRef.current || isCancelledRef.current) return;
 
-          await Analytics.track('import_audio_completed', {
-            success: 'true',
-            duration_seconds: event.payload.duration_seconds.toString(),
-            segments_count: event.payload.segments_count.toString()
-          });
+            const operation = operationRef.current;
+            await Analytics.track('import_audio_completed', {
+              success: 'true',
+              duration_seconds: event.payload.duration_seconds.toString(),
+              segments_count: event.payload.segments_count.toString()
+            }).catch(error => console.warn('Failed to track import completion:', error));
+            if (cleanedUpRef.current || isCancelledRef.current || operation !== operationRef.current) return;
 
-          setStatus('complete');
-          setProgress(null);
-          try {
-            await applyPinnedSummaryLanguageToMeeting(event.payload.meeting_id);
-          } catch (error) {
-            console.warn('Failed to apply pinned summary language to imported meeting:', error);
-            toast.warning('未能应用默认纪要语言', {
-              description: '音频已导入并保存，但默认纪要语言未生效，可在会议页面重新选择。',
-            });
-          }
-          onCompleteRef.current?.(event.payload);
+            setStatus('complete');
+            setProgress(null);
+            try {
+              await applyPinnedSummaryLanguageToMeeting(event.payload.meeting_id);
+            } catch (error) {
+              console.warn('Failed to apply pinned summary language to imported meeting:', error);
+              toast.warning('未能应用默认纪要语言', {
+                description: '音频已导入并保存，但默认纪要语言未生效，可在会议页面重新选择。',
+              });
+            }
+            if (cleanedUpRef.current || isCancelledRef.current || operation !== operationRef.current) return;
+            onCompleteRef.current?.(event.payload);
+          })().catch(error => console.error('Import completion callback failed:', error));
         }
       );
       if (cleanedUpRef.current) {
@@ -132,15 +144,20 @@ export function useImportAudio({
       // Error event
       const unlistenError = await listen<ImportError>(
         'import-error',
-        async (event) => {
-          if (isCancelledRef.current) return;
+        (event) => {
+          void (async () => {
+            if (cleanedUpRef.current || isCancelledRef.current) return;
 
-          await Analytics.trackError('import_audio_failed', event.payload.error);
+            const operation = operationRef.current;
+            await Analytics.trackError('import_audio_failed', event.payload.error)
+              .catch(error => console.warn('Failed to track import error:', error));
+            if (cleanedUpRef.current || isCancelledRef.current || operation !== operationRef.current) return;
 
-          setStatus('error');
-          const message = toUserMessage(event.payload.error, '音频导入失败，请重试。');
-          setError(message);
-          onErrorRef.current?.(message);
+            setStatus('error');
+            const message = toUserMessage(event.payload.error, '音频导入失败，请重试。');
+            setError(message);
+            onErrorRef.current?.(message);
+          })().catch(error => console.error('Import error callback failed:', error));
         }
       );
       if (cleanedUpRef.current) {
@@ -151,7 +168,10 @@ export function useImportAudio({
       unlisteners.push(unlistenError);
     };
 
-    setupListeners();
+    void setupListeners().catch(error => {
+      unlisteners.splice(0).forEach(unlisten => unlisten());
+      console.error('Failed to setup import listeners:', error);
+    });
 
     return () => {
       cleanedUpRef.current = true;
@@ -161,11 +181,13 @@ export function useImportAudio({
 
   // Select file using native file dialog
   const selectFile = useCallback(async (): Promise<AudioFileInfo | null> => {
+    const operation = ++operationRef.current;
     setStatus('validating');
     setError(null);
 
     try {
       const result = await invoke<AudioFileInfo | null>('select_and_validate_audio_command');
+      if (!mountedRef.current || operation !== operationRef.current) return null;
       if (result) {
         setFileInfo(result);
         setStatus('idle');
@@ -176,6 +198,7 @@ export function useImportAudio({
         return null;
       }
     } catch (err: any) {
+      if (!mountedRef.current || operation !== operationRef.current) return null;
       setStatus('error');
       const errorMsg = toUserMessage(err, '无法读取音频文件，请检查文件后重试。');
       setError(errorMsg);
@@ -186,15 +209,18 @@ export function useImportAudio({
 
   // Validate a file from a given path (for drag-drop)
   const validateFile = useCallback(async (path: string): Promise<AudioFileInfo | null> => {
+    const operation = ++operationRef.current;
     setStatus('validating');
     setError(null);
 
     try {
       const result = await invoke<AudioFileInfo>('validate_audio_file_command', { path });
+      if (!mountedRef.current || operation !== operationRef.current) return null;
       setFileInfo(result);
       setStatus('idle');
       return result;
     } catch (err: any) {
+      if (!mountedRef.current || operation !== operationRef.current) return null;
       setStatus('error');
       const errorMsg = toUserMessage(err, '无法读取音频文件，请检查文件后重试。');
       setError(errorMsg);
@@ -212,6 +238,7 @@ export function useImportAudio({
       model?: string | null,
       provider?: string | null
     ) => {
+      const operation = ++operationRef.current;
       isCancelledRef.current = false;
       setStatus('processing');
       setError(null);
@@ -225,9 +252,10 @@ export function useImportAudio({
             language: language || 'auto',
             model_provider: provider || '',
             model_name: model || ''
-          });
+          }).catch(error => console.warn('Failed to track import start:', error));
         }
 
+        if (!mountedRef.current || isCancelledRef.current || operation !== operationRef.current) return;
         await invoke('start_import_audio_command', {
           sourcePath,
           title,
@@ -236,11 +264,13 @@ export function useImportAudio({
           provider: provider || null,
         });
       } catch (err: any) {
+        if (!mountedRef.current || isCancelledRef.current || operation !== operationRef.current) return;
         setStatus('error');
         const errorMsg = toUserMessage(err, '无法开始导入音频，请重试。');
         setError(errorMsg);
 
-        await Analytics.trackError('import_audio_failed', errorMsg);
+        await Analytics.trackError('import_audio_failed', errorMsg)
+          .catch(error => console.warn('Failed to track import error:', error));
 
         onErrorRef.current?.(errorMsg);
       }
@@ -250,9 +280,11 @@ export function useImportAudio({
 
   // Cancel ongoing import
   const cancelImport = useCallback(async () => {
+    const operation = ++operationRef.current;
     isCancelledRef.current = true;
     try {
       await invoke('cancel_import_command');
+      if (!mountedRef.current || operation !== operationRef.current) return;
       setStatus('idle');
       setProgress(null);
     } catch (err: any) {
@@ -262,7 +294,8 @@ export function useImportAudio({
 
   // Reset all state
   const reset = useCallback(() => {
-    isCancelledRef.current = false;
+    operationRef.current += 1;
+    isCancelledRef.current = true;
     setStatus('idle');
     setFileInfo(null);
     setProgress(null);

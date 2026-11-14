@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { updateService, UpdateInfo } from '@/services/updateService';
 import { showUpdateNotification } from '@/components/UpdateNotification';
 
@@ -18,15 +18,24 @@ export function useUpdateCheck(options: UseUpdateCheckOptions = {}) {
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
   const [isChecking, setIsChecking] = useState(false);
 
+  const mountedRef = useRef(false);
+  const requestRef = useRef(0);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; requestRef.current += 1; };
+  }, []);
+
   const checkForUpdates = async (force = false) => {
     // Skip if checked recently (unless forced)
     if (!force && updateService.wasCheckedRecently()) {
       return;
     }
 
+    const request = ++requestRef.current;
     setIsChecking(true);
     try {
       const info = await updateService.checkForUpdates(force);
+      if (!mountedRef.current || request !== requestRef.current) return;
       setUpdateInfo(info);
 
       if (info.available) {
@@ -42,7 +51,7 @@ export function useUpdateCheck(options: UseUpdateCheckOptions = {}) {
       console.error('Failed to check for updates:', error);
       // Silently fail on startup checks to avoid disrupting user experience
     } finally {
-      setIsChecking(false);
+      if (mountedRef.current && request === requestRef.current) setIsChecking(false);
     }
   };
 

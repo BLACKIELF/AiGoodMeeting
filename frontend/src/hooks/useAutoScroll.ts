@@ -57,6 +57,8 @@ export function useAutoScroll({
     const isProgrammaticScrollRef = useRef(false);
     // Track previous segment count to detect new segments
     const prevSegmentCountRef = useRef(segments.length);
+    const manualResetRef = useRef<ReturnType<typeof setTimeout>>();
+    useEffect(() => () => { clearTimeout(manualResetRef.current); }, []);
 
     /**
      * Check if the user is scrolled near the bottom
@@ -78,7 +80,8 @@ export function useAutoScroll({
             setAutoScroll(true);
 
             // Reset the flag after a small delay to account for scroll event propagation
-            setTimeout(() => {
+            clearTimeout(manualResetRef.current);
+            manualResetRef.current = setTimeout(() => {
                 isProgrammaticScrollRef.current = false;
             }, 50);
         }
@@ -135,6 +138,8 @@ export function useAutoScroll({
             return;
         }
 
+        let backupTimer: ReturnType<typeof setTimeout> | undefined;
+        let resetTimer: ReturnType<typeof setTimeout> | undefined;
         const segmentCount = segments.length;
         const prevCount = prevSegmentCountRef.current;
         const hasNewSegments = segmentCount > prevCount;
@@ -160,7 +165,7 @@ export function useAutoScroll({
                 virtualizer.scrollToOffset(totalSize + 1000, { align: "end" });
 
                 // Also set scrollTop directly as backup after virtualizer updates
-                setTimeout(() => {
+                backupTimer = setTimeout(() => {
                     if (scrollRef.current) {
                         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
                     }
@@ -170,10 +175,15 @@ export function useAutoScroll({
             }
 
             // Reset the flag after a longer delay for virtualization
-            setTimeout(() => {
+            resetTimer = setTimeout(() => {
                 isProgrammaticScrollRef.current = false;
             }, 150);
         }
+        return () => {
+            clearTimeout(backupTimer);
+            clearTimeout(resetTimer);
+            isProgrammaticScrollRef.current = false;
+        };
     }, [segments.length, isRecording, isPaused, useVirtualization, virtualizer, scrollRef, isNearBottom, disableAutoScroll]);
 
     // Auto-scroll to active segment (when clicking on search results, etc.)
@@ -194,9 +204,10 @@ export function useAutoScroll({
             }
 
             // Reset the flag after scroll animation completes
-            setTimeout(() => {
+            const timer = setTimeout(() => {
                 isProgrammaticScrollRef.current = false;
             }, 500);
+            return () => { clearTimeout(timer); isProgrammaticScrollRef.current = false; };
         }
     }, [activeSegmentId, useVirtualization, virtualizer, segments]);
 

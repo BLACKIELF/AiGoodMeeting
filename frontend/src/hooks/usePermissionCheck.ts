@@ -1,5 +1,5 @@
 import { toUserMessage } from '@/lib/user-message';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 
 export interface PermissionStatus {
@@ -17,7 +17,12 @@ export function usePermissionCheck() {
     error: null,
   });
 
+  const mountedRef = useRef(false);
+  const requestRef = useRef(0);
+  const recheckTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
   const checkPermissions = async () => {
+    const request = ++requestRef.current;
     setStatus(prev => ({ ...prev, isChecking: true, error: null }));
 
     try {
@@ -33,13 +38,8 @@ export function usePermissionCheck() {
       const outputDevices = devices.filter(d => d.device_type === 'Output');
       const hasSystemAudio = outputDevices.length > 0;
 
-      console.log('Permission check:', {
-        hasMicrophone,
-        hasSystemAudio,
-        inputDevices: inputDevices.length,
-        outputDevices: outputDevices.length
-      });
 
+      if (!mountedRef.current || request !== requestRef.current) return { hasMicrophone, hasSystemAudio };
       setStatus({
         hasMicrophone,
         hasSystemAudio,
@@ -50,6 +50,7 @@ export function usePermissionCheck() {
       return { hasMicrophone, hasSystemAudio };
     } catch (error) {
       console.error('Failed to check audio permissions:', error);
+      if (!mountedRef.current || request !== requestRef.current) return { hasMicrophone: false, hasSystemAudio: false };
       setStatus({
         hasMicrophone: false,
         hasSystemAudio: false,
@@ -66,7 +67,9 @@ export function usePermissionCheck() {
       await invoke('get_audio_devices');
 
       // Recheck after triggering
-      setTimeout(() => {
+      if (!mountedRef.current) return;
+      clearTimeout(recheckTimerRef.current);
+      recheckTimerRef.current = setTimeout(() => {
         checkPermissions();
       }, 1000);
     } catch (error) {
@@ -76,7 +79,13 @@ export function usePermissionCheck() {
 
   // Check permissions on mount
   useEffect(() => {
-    checkPermissions();
+    mountedRef.current = true;
+    void checkPermissions();
+    return () => {
+      mountedRef.current = false;
+      requestRef.current += 1;
+      clearTimeout(recheckTimerRef.current);
+    };
   }, []);
 
   return {

@@ -28,20 +28,19 @@ export function RecordingPostProcessingProvider({ children }: { children: React.
   } = useRecordingStop(setIsRecording, setIsRecordingDisabled);
 
   useEffect(() => {
+    let disposed = false;
     let unlistenFn: (() => void) | undefined;
 
     const setupListener = async () => {
       try {
         // Listen for recording-stop-complete event from Rust
         unlistenFn = await listen<boolean>('recording-stop-complete', (event) => {
-          console.log('[RecordingPostProcessing] Received recording-stop-complete event:', event.payload);
 
           // Call the post-processing handler
           // event.payload is the callApi boolean (true for normal stops)
-          handleRecordingStop(event.payload);
+          if (!disposed) void handleRecordingStop(event.payload).catch(error => console.error('Recording post-processing failed:', error));
         });
 
-        console.log('[RecordingPostProcessing] Event listener set up successfully');
       } catch (error) {
         console.error('[RecordingPostProcessing] Failed to set up event listener:', error);
       }
@@ -50,8 +49,8 @@ export function RecordingPostProcessingProvider({ children }: { children: React.
     setupListener();
 
     return () => {
+      disposed = true;
       if (unlistenFn) {
-        console.log('[RecordingPostProcessing] Cleaning up event listener');
         unlistenFn();
       }
     };

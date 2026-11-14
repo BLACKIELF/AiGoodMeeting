@@ -21,7 +21,6 @@ export function useTranscriptStreaming(
   enableStreaming: boolean
 ) {
   const [streamingSegment, setStreamingSegment] = useState<StreamingSegment | null>(null);
-  const lastSegmentIdRef = useRef<string | null>(null);
   const streamingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -32,15 +31,13 @@ export function useTranscriptStreaming(
         streamingIntervalRef.current = null;
       }
       setStreamingSegment(null);
-      lastSegmentIdRef.current = null;
       return;
     }
 
     const latestSegment = segments[segments.length - 1];
 
-    // Check if this is a new segment
-    if (latestSegment.id !== lastSegmentIdRef.current) {
-      lastSegmentIdRef.current = latestSegment.id;
+    // Each latest segment revision owns its streaming interval.
+    {
 
       // Clear any existing streaming interval
       if (streamingIntervalRef.current) {
@@ -104,7 +101,7 @@ export function useTranscriptStreaming(
         streamingIntervalRef.current = null;
       }
     };
-  }, [segments, isRecording, enableStreaming]);
+  }, [segments[segments.length - 1]?.id, segments[segments.length - 1]?.text, isRecording, enableStreaming]);
 
   /**
    * Get the display text for a segment, with streaming effect if applicable

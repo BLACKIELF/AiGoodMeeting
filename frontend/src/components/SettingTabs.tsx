@@ -35,13 +35,15 @@ export function SettingTabs({
     const handleTabChange = (nextTab: string) => {
         if (nextTab === activeTab) return;
         setActiveTab(nextTab);
-        setSaveSuccess(null); // Reset save success when tab changes
+        if (nextTab && nextTab !== activeTab) {
+            setSaveSuccess(null); // Reset save success only when switching to another card
+        }
     };
 
     return (
         <CardWorkspace
             id="setting-dialog"
-            className="w-full max-h-[calc(100vh-10rem)] overflow-y-auto"
+            className="w-full h-[min(560px,calc(100vh-10rem))] min-h-[360px] custom-scrollbar"
             value={activeTab}
             onValueChange={handleTabChange}
             cards={[
@@ -59,5 +61,3 @@ export function SettingTabs({
         />
     )
 }
-
-

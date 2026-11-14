@@ -1,6 +1,8 @@
 'use client'
 
 import './globals.css'
+import './liquid-glass.css'
+import { LiquidGlassEffects } from '@/components/LiquidGlassEffects'
 import Sidebar from '@/components/Sidebar'
 import { SidebarProvider } from '@/components/Sidebar/SidebarProvider'
 import MainContent from '@/components/MainContent'
@@ -279,6 +281,7 @@ export default function RootLayout({
             </RecordingStateProvider>
           </AnalyticsProvider>
 
+          <LiquidGlassEffects />
           <AppearanceToaster />
         </AppearanceProvider>
       </body>

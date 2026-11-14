@@ -1,6 +1,6 @@
-# AiGoodMeeting 会议纪要 1028v4
+# AiGoodMeeting 1113v5 构建说明
 
-基于官方 Community v0.4.1，提交 `a2cb62e827da7ef59f65064c97233efb2313878e`，保留上游 MIT 许可。当前验证平台：Apple M4 Pro、48 GiB、macOS 27.0。此版本是本地源码改造版，未由 Apple 公证，也未发布到上游。
+基于官方 Community v0.4.1，提交 `a2cb62e827da7ef59f65064c97233efb2313878e`，保留上游 MIT 许可。当前验证平台：Apple M4 Pro、48 GiB、macOS 27.0。1113v5 提供 Apple Silicon 构建，应用采用本地签名。
 
 ## 功能与数据
 
@@ -8,13 +8,8 @@
 
 本机构建标识为 `com.meetily.local-speakers`，与原版 `com.meetily.ai` 分开。复制旧数据时使用 SQLite 在线备份，不直接复制正在写入的数据库。录音按会议原有目录读取；不要删除仍被数据库引用的音频。
 
-## 卡片交互
+## 本机数据与运行环境
 
-工作台、会议列表、会议详情和设置共用竖排卡片。宽窗左卡片右内容；窄窗上下排列。只展开一项，访问过的内容继续挂载以保留编辑状态。录音控制单实例常驻底栏；原录音、转写、分人和总结调用不变。动效约 200ms，键盘切换直接呈现，遵循系统减少动态效果。
-
-## 已安装副本
-
-- 应用：`/Applications/AiGoodMeeting 1028v4.app`
 - 本机数据：`~/Library/Application Support/com.meetily.local-speakers`
 - 外部运行时由该目录的 `diarization-runtime.json` 指定，必须使用另一台电脑自己的绝对路径，不能直接照搬本机路径。
 - 当前运行时说明、固定依赖、模型来源及验收在 `local-diarization/README.md`、`requirements.lock` 和 `runtime-manifest-1028v1.json`。
@@ -40,7 +35,7 @@ CMAKE_POLICY_VERSION_MINIMUM=3.5 node_modules/.bin/tauri build --config src-taur
 
 本次复用官方 v0.4.1 arm64 应用的 `ffmpeg` 与 `llama-helper`，放入 `frontend/src-tauri/binaries/`，文件名分别为 `ffmpeg-aarch64-apple-darwin` 和 `llama-helper-aarch64-apple-darwin`。这两个受忽略的构建辅助文件在完整源码归档中单独包含，Git 仓库不含二进制。
 
-构建输出为项目根 `target/release/bundle/macos/AiGoodMeeting 1028v4.app`。安装时先比较已有版本、保留原版，再复制新构建；用 `codesign --verify --deep --strict` 校验。配置关闭了本定制版的官方更新地址，避免被官方版本覆盖。
+构建输出为项目根 `target/release/bundle/macos/AiGoodMeeting.app`。安装时先比较已有版本、保留原版，再复制新构建；用 `codesign --verify --deep --strict` 校验。配置关闭了本定制版的官方更新地址，避免被官方版本覆盖。
 
 ## 运行时重建
 
@@ -50,8 +45,8 @@ CMAKE_POLICY_VERSION_MINIMUM=3.5 node_modules/.bin/tauri build --config src-taur
 
 ## 验证及边界
 
-分人部分的前端、Rust 后端 7 项检查、运行时 14 项检查已通过；皮肤已完成七套切换、明暗及系统外观、持久化和原生标题栏检查。本轮卡片交互的最终构建、安装结果见发行说明。独立运行时在系统禁止联网后仍能处理三声音合成样本。两声音、三声音和 131 秒跨分块样本通过匿名分组验收；四人是模型容量，尚未验证四人自然会议或多小时准确率。重叠、相近音色、噪声和词语时间点不可靠时需人工校对。
+分人部分的前端、Rust 后端 7 项检查、运行时 14 项检查已通过；皮肤已完成七套切换、明暗及系统外观、持久化和原生标题栏检查。1113v5 通过 161 项前端测试、类型检查和 Apple Silicon 构建。独立运行时在系统禁止联网后仍能处理三声音合成样本。两声音、三声音和 131 秒跨分块样本通过匿名分组验收；四人是模型容量，尚未验证四人自然会议或多小时准确率。重叠、相近音色、噪声和词语时间点不可靠时需人工校对。
 
 本地 Qwen3 8B 能使用已命名发言生成负责人，但仍可能捏造日期或推断主持人；验收保留错误原始结果。日期、姓名、金额及待办要与录音核对。
 
-运行不需要 `target/` 或 `frontend/node_modules/`。本次清理构建缓存后，后续开发须按锁文件恢复依赖；已安装应用和 Python 运行环境必须保留。
+运行不需要 `target/` 或 `frontend/node_modules/`。如后续清理构建缓存，开发时按锁文件恢复依赖；已安装应用和 Python 运行环境必须保留。

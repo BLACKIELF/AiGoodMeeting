@@ -40,7 +40,7 @@ export default function Home() {
 
   // Hooks
   const { hasMicrophone, hasSystemAudio, isChecking, checkPermissions } = usePermissionCheck();
-  const { setIsMeetingActive, isCollapsed: sidebarCollapsed, refetchMeetings } = useSidebar();
+  const { setIsMeetingActive, isCollapsed: sidebarCollapsed, refetchMeetings, meetings, setCurrentMeeting } = useSidebar();
   const { modals, messages, showModal, hideModal } = useModalState(transcriptModelConfig);
   const { isRecordingDisabled, setIsRecordingDisabled } = useRecordingStateSync(isRecording, setIsRecordingState, setIsMeetingActive);
   const { handleRecordingStart } = useRecordingStart(isRecording, setIsRecordingState, showModal);
@@ -197,7 +197,7 @@ export default function Home() {
           : recordingState.isRecording ? (recordingState.isPaused ? '录音已暂停' : '正在录音')
             : isChecking ? '正在检查录音设备…'
               : status === RecordingStatus.ERROR ? toUserMessage(recordingState.statusMessage, '录音未完成，请检查设备后重试。')
-                : !hasMicrophone ? '请先检查麦克风权限。' : '点击下方“开始录音”即可开始。';
+                : !hasMicrophone ? '请先检查麦克风权限。' : '点击“开始录音”即可开始。';
 
   return (
     <div className="agb-page flex h-dvh min-w-0 flex-col bg-background text-foreground">
@@ -225,6 +225,11 @@ export default function Home() {
           isPaused={recordingState.isPaused}
           recordingStatus={recordingStatus}
           canImport={betaFeatures.importAndRetranscribe}
+          recentMeetings={meetings}
+          onOpenMeeting={(meeting) => {
+            setCurrentMeeting(meeting);
+            router.push(`/meeting-details?id=${meeting.id}`);
+          }}
           permissionWarning={!recordingState.isRecording && !isChecking && (
             <PermissionWarning
               hasMicrophone={hasMicrophone}

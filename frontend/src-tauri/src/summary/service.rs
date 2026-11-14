@@ -6,9 +6,10 @@ use crate::summary::language_detection::detect_summary_language;
 use crate::summary::metadata::read_detected_summary_language_from_metadata;
 use crate::summary::processor::{
     clean_llm_markdown_detailed, extract_meeting_name_from_markdown, generate_meeting_summary,
-    language_name_from_code, require_visible_markdown,
+    language_name_from_code, meeting_title_value, require_visible_markdown,
 };
 use crate::summary::templates::{self, Template};
+use crate::summary::plain_text::to_summary_plain_text;
 use crate::ollama::metadata::ModelMetadataCache;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -33,27 +34,14 @@ struct RegisteredCancellation {
 static CANCELLATION_REGISTRY: LazyLock<Arc<Mutex<HashMap<String, RegisteredCancellation>>>> =
     LazyLock::new(|| Arc::new(Mutex::new(HashMap::new())));
 
-/// Strips the first `#` heading line; returns "" if no `#` is found.
-fn strip_leading_title(markdown: &str) -> String {
-    if let Some(hash_pos) = markdown.find('#') {
-        let body_start = markdown[hash_pos..]
-            .find('\n')
-            .map_or(markdown.len(), |line_end| hash_pos + line_end);
-        markdown[body_start..].trim_start().to_string()
+fn strip_title_if_present(report: &str) -> String {
+    let first_line = report.trim_start().lines().next().unwrap_or_default();
+    if meeting_title_value(first_line).is_some() {
+        report.trim_start().split_once('\n')
+            .map_or("", |(_, body)| body.trim_start())
+            .to_string()
     } else {
-        String::new()
-    }
-}
-
-/// Strips the leading H1 (`# Title\n...`) only when the markdown starts with one.
-/// No-op on already-stripped values, values starting with `## Subheading`, or values
-/// without any heading. Avoids the silent-empty-return case where `strip_leading_title`
-/// returns "" for input lacking a leading `#`.
-fn strip_title_if_present(markdown: &str) -> String {
-    if markdown.trim_start().starts_with("# ") {
-        strip_leading_title(markdown)
-    } else {
-        markdown.to_string()
+        report.to_string()
     }
 }
 
@@ -138,6 +126,15 @@ fn normalise_summary_language_for_cache(summary_language: Option<&str>) -> Optio
     language_name_from_code(summary_language?.trim()).map(str::to_string)
 }
 
+fn normalize_english_cache_markdown(raw: &str) -> String {
+    let trimmed = raw.trim_start();
+    if let Some(rest) = trimmed.strip_prefix("# ") {
+        to_summary_plain_text(&format!("Meeting title: {}", rest))
+    } else {
+        to_summary_plain_text(raw)
+    }
+}
+
 fn build_summary_result_json(
     final_markdown: &str,
     english_markdown: &str,
@@ -148,7 +145,7 @@ fn build_summary_result_json(
 ) -> Result<serde_json::Value, String> {
     let cleaned_final = clean_llm_markdown_detailed(final_markdown);
     require_visible_markdown("Final summary", &cleaned_final)?;
-    let markdown = strip_title_if_present(&cleaned_final.markdown);
+    let markdown = to_summary_plain_text(&strip_title_if_present(&cleaned_final.markdown));
     if markdown.trim().is_empty() {
         return Err("Final summary contains no visible content after title removal".to_string());
     }
@@ -159,7 +156,7 @@ fn build_summary_result_json(
     Ok(serde_json::json!({
         "markdown": markdown,
         ENGLISH_CACHE_FIELD: EnglishSummaryCache {
-            markdown: cleaned_english.markdown,
+            markdown: normalize_english_cache_markdown(&cleaned_english.markdown),
             source,
             output_language: normalise_summary_language_for_cache(output_language),
         },
@@ -346,6 +343,11 @@ impl SummaryService {
         summary_language: Option<String>,
     ) {
         let start_time = Instant::now();
+        let original_title = MeetingsRepository::get_meeting(&pool, &meeting_id)
+            .await
+            .ok()
+            .flatten()
+            .map(|meeting| meeting.title);
         info!(
             "Starting background processing for meeting_id: {}",
             meeting_id
@@ -596,6 +598,9 @@ impl SummaryService {
                     result_json["speaker_transcript_updated_at"] = serde_json::Value::String(revision);
                 }
 
+                let generated_title = extract_meeting_name_from_markdown(&generated.final_markdown)
+                    .or_else(|| extract_meeting_name_from_markdown(&generated.english_markdown));
+
                 match SummaryProcessesRepository::update_process_completed(
                     &pool,
                     &meeting_id,
@@ -603,23 +608,11 @@ impl SummaryService {
                     result_json,
                     generated.successful_chunk_count,
                     duration,
+                    original_title.as_deref().zip(generated_title.as_deref()),
                 )
                 .await
                 {
-                    Ok(true) => {
-                        if let Some(name) =
-                            extract_meeting_name_from_markdown(&generated.final_markdown)
-                                .filter(|name| !name.is_empty())
-                        {
-                            if let Err(error) =
-                                MeetingsRepository::update_meeting_name(&pool, &meeting_id, &name)
-                                    .await
-                            {
-                                error!("Failed to update meeting name for {}: {}", meeting_id, error);
-                            }
-                        }
-                        info!("Summary saved successfully for meeting_id: {}", meeting_id);
-                    }
+                    Ok(true) => info!("Summary saved successfully for meeting_id: {}", meeting_id),
                     Ok(false) => warn!("Skipped stale summary completion for meeting_id: {}", meeting_id),
                     Err(error) => error!(
                         "Failed to save completed process for {}: {}",
@@ -713,43 +706,47 @@ mod tests {
     #[test]
     fn test_strip_leading_title_with_body() {
         let input = "# Meeting Title\nThis is the body.\nMore content.";
-        let result = strip_leading_title(input);
+        let result = strip_title_if_present(input);
         assert_eq!(result, "This is the body.\nMore content.");
     }
 
     #[test]
     fn test_strip_leading_title_only() {
         let input = "# Meeting Title";
-        let result = strip_leading_title(input);
-        assert_eq!(result, "");
-    }
-
-    #[test]
-    fn test_strip_leading_title_no_heading() {
-        let input = "No heading here.\nJust body.";
-        let result = strip_leading_title(input);
+        let result = strip_title_if_present(input);
         assert_eq!(result, "");
     }
 
     #[test]
     fn test_strip_leading_title_multiline_body() {
         let input = "# Title\n## Subheading\nParagraph 1\n\nParagraph 2";
-        let result = strip_leading_title(input);
+        let result = strip_title_if_present(input);
         assert_eq!(result, "## Subheading\nParagraph 1\n\nParagraph 2");
     }
 
     #[test]
     fn test_strip_leading_title_empty_after_heading() {
         let input = "# Title\n";
-        let result = strip_leading_title(input);
+        let result = strip_title_if_present(input);
         assert_eq!(result, "");
     }
 
     #[test]
     fn test_strip_leading_title_whitespace_after_heading() {
         let input = "# Title\n   \n Body with leading spaces";
-        let result = strip_leading_title(input);
+        let result = strip_title_if_present(input);
         assert_eq!(result, "Body with leading spaces");
+    }
+
+    #[test]
+    fn generated_topic_is_saved_separately_from_summary_body() {
+        for report in [
+            "Meeting title: Release planning\nDecisions\nShip on Friday.",
+            "会议主题: 发布计划\n决议\n周五发布。",
+        ] {
+            assert!(extract_meeting_name_from_markdown(report).is_some());
+            assert_eq!(strip_title_if_present(report), report.split_once('\n').unwrap().1);
+        }
     }
 
     #[test]
@@ -764,7 +761,6 @@ mod tests {
 
     #[test]
     fn test_strip_title_if_present_no_heading_preserved() {
-        // Distinct from strip_leading_title which returns "" — this preserves input.
         assert_eq!(strip_title_if_present("Just body text"), "Just body text");
     }
 
@@ -860,7 +856,7 @@ mod tests {
 
         assert_eq!(
             extract_cached_english_markdown(&raw, &source, Some("de")).unwrap(),
-            Some("# Meeting\n## Points\nHello".to_string())
+            Some("Meeting title: Meeting\nPoints\nHello".to_string())
         );
     }
 
@@ -1070,10 +1066,10 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(result["markdown"], "## Decisions\nDone");
+        assert_eq!(result["markdown"], "Decisions\nDone");
         assert_eq!(
             result["english_cache"]["markdown"],
-            "# English Title\n## Decisions\nDone"
+            "Meeting title: English Title\nDecisions\nDone"
         );
     }
 

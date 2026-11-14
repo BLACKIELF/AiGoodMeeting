@@ -70,12 +70,12 @@ impl Template {
         Ok(())
     }
 
-    /// Generates a clean markdown template structure
+    /// Generates a plain-text outline; the method name remains compatible with template callers.
     pub fn to_markdown_structure(&self) -> String {
-        let mut markdown = String::from("# <Add Title here>\n\n");
+        let mut markdown = String::from("Meeting title: <Add Title here>\n\n");
 
         for section in &self.sections {
-            markdown.push_str(&format!("**{}**\n\n", section.title));
+            markdown.push_str(&format!("{}\n\n", crate::summary::plain_text::to_summary_plain_text(&section.title)));
         }
 
         markdown
@@ -84,12 +84,12 @@ impl Template {
     /// Generates section-specific instructions for the LLM
     pub fn to_section_instructions(&self) -> String {
         let mut instructions = String::from(
-            "- **For the main title (`# [AI-Generated Title]`):** Analyze the entire transcript and create a concise, descriptive title for the meeting.\n"
+            "For the main title: Analyze the entire transcript and create a concise, descriptive title. Put it on the first line after Meeting title:.\n"
         );
 
         for section in &self.sections {
             instructions.push_str(&format!(
-                "- **For the '{}' section:** {}.\n",
+                "For the '{}' section: {}.\n",
                 section.title, section.instruction
             ));
 
@@ -99,8 +99,8 @@ impl Template {
 
             if let Some(format) = item_format {
                 instructions.push_str(&format!(
-                    "  - Items in this section should follow the format: `{}`.\n",
-                    format
+                    "Items in this section should follow this content structure, using plain text: {}.\n",
+                    crate::summary::plain_text::to_summary_plain_text(format)
                 ));
             }
         }

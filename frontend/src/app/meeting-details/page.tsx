@@ -68,9 +68,7 @@ function MeetingDetailsContent() {
   const setupAutoGeneration = useCallback(async () => {
     if (hasCheckedAutoGen) return; // Only check once
 
-    // Only auto-generate if navigated from recording
-    if (source !== 'recording') {
-      console.log('Not from recording navigation, skipping auto-generation');
+    if (source !== 'recording' && source !== 'import') {
       setHasCheckedAutoGen(true);
       return;
     }
@@ -151,17 +149,6 @@ function MeetingDetailsContent() {
       setError(toUserMessage(transcriptError, '会议内容读取失败，请重新打开这场会议。'));
     }
   }, [transcriptError]);
-
-  // Extract fetchMeetingDetails for use in child components (now refetches via hook)
-  const fetchMeetingDetails = useCallback(async () => {
-    if (!meetingId || meetingId === 'intro-call') {
-      return;
-    }
-
-    // The usePaginatedTranscripts hook automatically refetches when meetingId changes
-    // This function is kept for compatibility with onMeetingUpdated callback
-    console.log('fetchMeetingDetails called - pagination hook will handle refetch');
-  }, [meetingId]);
 
   // Reset states when meetingId changes (prevent race conditions)
   useEffect(() => {
@@ -280,7 +267,7 @@ function MeetingDetailsContent() {
     onAutoGenerateComplete={() => setShouldAutoGenerate(false)}
     onMeetingUpdated={async () => {
       // Refetch meeting details to get updated title from backend
-      await fetchMeetingDetails();
+      await refetch();
       // Refetch meetings list to update sidebar
       await refetchMeetings();
     }}

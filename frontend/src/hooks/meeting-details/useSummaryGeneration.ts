@@ -108,6 +108,7 @@ export function useSummaryGeneration({
   const visibleMeetingIdRef = useRef(meeting.id);
   visibleMeetingIdRef.current = meeting.id;
   const generationIdRef = useRef(0);
+  const viewEpochRef = useRef(0);
   const activeProcessIdRef = useRef<string | null>(null);
   const trackedAttemptRef = useRef<{
     generationId: number;
@@ -150,7 +151,7 @@ export function useSummaryGeneration({
       outcome === 'ok' || outcome === 'fallback',
       (Date.now() - attempt.startedAt) / 1000,
       outcome === 'ok' ? undefined : outcome,
-    );
+    ).catch(error => console.warn('Failed to track summary completion:', error));
   }, []);
 
   const failGeneration = useCallback(async (
@@ -253,7 +254,7 @@ export function useSummaryGeneration({
         return;
       }
       const metadata = readSummaryMetadata(pollingResult.data);
-      const meetingName = metadata.meetingName || pollingResult.meetingName;
+      const meetingName = pollingResult.meetingName || metadata.meetingName;
       if (meetingName) {
         updateMeetingTitle(meetingName);
       }
@@ -292,6 +293,8 @@ export function useSummaryGeneration({
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
+      generationIdRef.current += 1;
+      viewEpochRef.current += 1;
       if (activeProcessIdRef.current) {
         stopSummaryPolling(meeting.id, activeProcessIdRef.current);
       }
@@ -327,11 +330,13 @@ export function useSummaryGeneration({
     customPrompt?: string;
     isRegeneration?: boolean;
   }) => {
+    if (!mountedRef.current || visibleMeetingIdRef.current !== meeting.id) return;
     const previousAttempt = trackedAttemptRef.current;
     if (previousAttempt && !previousAttempt.finished) {
       await finishGeneration(previousAttempt.generationId, 'cancelled');
     }
 
+    if (!mountedRef.current || visibleMeetingIdRef.current !== meeting.id) return;
     const generationId = ++generationIdRef.current;
     activeProcessIdRef.current = null;
     setSummaryStatus(isRegeneration ? 'regenerating' : 'processing');
@@ -356,9 +361,9 @@ export function useSummaryGeneration({
         modelConfig.model,
         transcriptText.length,
         timeSinceRecording,
-      );
+      ).catch(error => console.warn('Failed to track summary start:', error));
       if (customPrompt.trim()) {
-        await Analytics.trackCustomPromptUsed(customPrompt.trim().length);
+        await Analytics.trackCustomPromptUsed(customPrompt.trim().length).catch(error => console.warn('Failed to track custom prompt:', error));
       }
       toast.info(isRegeneration ? '正在重新生成纪要…' : '正在生成纪要…', {
         description: `使用 ${modelConfig.model}`,
@@ -413,7 +418,6 @@ export function useSummaryGeneration({
   // Helper function to fetch ALL transcripts for summary generation
   const fetchAllTranscripts = useCallback(async (meetingId: string): Promise<Transcript[]> => {
     try {
-      console.log('📊 Fetching all transcripts for meeting:', meetingId);
 
       // First, get total count by fetching first page
       const firstPage = await invokeTauri('api_get_meeting_transcripts', {
@@ -423,7 +427,6 @@ export function useSummaryGeneration({
       }) as { transcripts: Transcript[]; total_count: number; has_more: boolean };
 
       const totalCount = firstPage.total_count;
-      console.log(`📊 Total transcripts in database: ${totalCount}`);
 
       if (totalCount === 0) {
         return [];
@@ -436,10 +439,9 @@ export function useSummaryGeneration({
         offset: 0,
       }) as { transcripts: Transcript[]; total_count: number; has_more: boolean };
 
-      console.log(`✅ Fetched ${allData.transcripts.length} transcripts from database`);
       return allData.transcripts;
     } catch (error) {
-      console.error('❌ Error fetching all transcripts:', error);
+      console.error('Error fetching all transcripts:', error);
       toast.error('读取会议转写失败，请重试');
       return [];
     }
@@ -469,11 +471,13 @@ export function useSummaryGeneration({
   }, []);
 
   const handleGenerateSummary = useCallback(async (customPrompt: string = '') => {
+    const viewEpoch = viewEpochRef.current;
     if (isModelConfigLoading) {
       toast.info('正在读取模型设置，请稍候…');
       return;
     }
     const allTranscripts = await fetchAllTranscripts(meeting.id);
+    if (!mountedRef.current || visibleMeetingIdRef.current !== meeting.id || viewEpoch !== viewEpochRef.current) return;
     if (!allTranscripts.length) {
       showPreflightError('暂无可整理的转写内容');
       return;
@@ -484,6 +488,7 @@ export function useSummaryGeneration({
         const models = await invokeTauri<unknown[]>('get_ollama_models', {
           endpoint: modelConfig.ollamaEndpoint || null,
         });
+        if (!mountedRef.current || visibleMeetingIdRef.current !== meeting.id || viewEpoch !== viewEpochRef.current) return;
         if (models.length === 0) {
           showPreflightError('尚无可用的 Ollama 模型，请先在模型设置中配置。');
           return;
@@ -499,6 +504,7 @@ export function useSummaryGeneration({
           modelName: modelConfig.model,
           refresh: true,
         });
+        if (!mountedRef.current || visibleMeetingIdRef.current !== meeting.id || viewEpoch !== viewEpochRef.current) return;
         if (!isReady) {
           showPreflightError('内置纪要模型尚未准备好，请检查模型设置。');
           onOpenModelSettings?.();
@@ -506,6 +512,7 @@ export function useSummaryGeneration({
         }
       }
     } catch (error) {
+      if (!mountedRef.current || visibleMeetingIdRef.current !== meeting.id || viewEpoch !== viewEpochRef.current) return;
       console.error('Failed to validate summary model:', error);
       showPreflightError('无法检查纪要模型，请检查模型设置后重试。');
       return;
@@ -528,7 +535,9 @@ export function useSummaryGeneration({
 
   // Public API: Regenerate summary from the current saved transcript
   const handleRegenerateSummary = useCallback(async () => {
+    const viewEpoch = viewEpochRef.current;
     const allTranscripts = await fetchAllTranscripts(meeting.id);
+    if (!mountedRef.current || visibleMeetingIdRef.current !== meeting.id || viewEpoch !== viewEpochRef.current) return;
 
     if (!allTranscripts.length) {
       console.error('No transcripts available for regeneration');

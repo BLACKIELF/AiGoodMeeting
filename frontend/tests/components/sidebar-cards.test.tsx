@@ -40,6 +40,36 @@ describe('sidebar meeting cards', () => {
     expect(renderer!.root.findAllByProps({ 'data-active': true })).toHaveLength(1);
   });
 
+  test('clicking an already selected meeting collapses its tools in-place while keeping route intact', async () => {
+    const open = mock((_id: string) => {});
+    function List() {
+      const [selected, select] = useState('meeting-one');
+      return <>{meetings.map(item => (
+        <SidebarMeetingCard key={item.id} item={item} isActive={selected === item.id} isMeetingItem
+          onOpen={() => { select(item.id); open(item.id); }} onRename={() => {}} onDelete={() => {}} />
+      ))}</>;
+    }
+    await act(async () => { renderer = create(<List />); });
+    const buttonOne = mainButton('meeting-one');
+    expect(buttonOne.props['aria-expanded']).toBe(true);
+
+    // Re-clicking active card collapses tools in-place
+    await act(async () => { buttonOne.props.onClick(); });
+    expect(buttonOne.props['aria-expanded']).toBe(false);
+    expect(buttonOne.props['aria-current']).toBe('page');
+    expect(card('meeting-one').findByProps({ className: 'agb-meeting-card-tools' }).props['data-open']).toBe(false);
+
+    // Clicking it again re-expands tools
+    await act(async () => { buttonOne.props.onClick(); });
+    expect(buttonOne.props['aria-expanded']).toBe(true);
+    expect(card('meeting-one').findByProps({ className: 'agb-meeting-card-tools' }).props['data-open']).toBe(true);
+
+    // Switching to meeting two collapses meeting one and opens meeting two (one expanded at a time)
+    await act(async () => { mainButton('meeting-two').props.onClick(); });
+    expect(mainButton('meeting-two').props['aria-expanded']).toBe(true);
+    expect(mainButton('meeting-one').props['aria-expanded']).toBe(false);
+  });
+
   test('closed tools are inert, absent from tab order and unable to invoke actions', async () => {
     const rename = mock(() => {}), remove = mock(() => {});
     await act(async () => {

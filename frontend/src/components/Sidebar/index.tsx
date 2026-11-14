@@ -50,14 +50,35 @@ export function SidebarMeetingCard({
   item, isActive, isMeetingItem, matchContext, onOpen, onRename, onDelete,
 }: SidebarMeetingCardProps) {
   const detailsId = React.useId();
+  const [isToolsExpanded, setIsToolsExpanded] = React.useState(isActive);
+
+  // Synchronize when the active meeting changes from outside:
+  // newly activated meeting opens its tools, deactivated meeting collapses its tools
+  React.useEffect(() => {
+    setIsToolsExpanded(isActive);
+  }, [isActive]);
+
+  const handleCardClick = () => {
+    if (!isActive) {
+      // First click on an inactive card: select meeting, navigate, and expand tools
+      setIsToolsExpanded(true);
+      onOpen();
+    } else {
+      // Re-clicking the already selected meeting toggles the tools area in-place while retaining route
+      setIsToolsExpanded(prev => !prev);
+      onOpen();
+    }
+  };
+
+  const isExpanded = isMeetingItem && isActive && isToolsExpanded;
 
   return (
-    <div className="agb-meeting-card group relative min-w-0" data-active={isActive}>
+    <div className="agb-meeting-card group relative min-w-0" data-active={isActive} data-tools-expanded={isExpanded}>
       <button
         type="button"
-        onClick={onOpen}
+        onClick={handleCardClick}
         aria-current={isActive ? 'page' : undefined}
-        aria-expanded={isMeetingItem ? isActive : undefined}
+        aria-expanded={isMeetingItem ? isExpanded : undefined}
         aria-controls={isMeetingItem ? detailsId : undefined}
         title={item.title}
         className="w-full min-w-0 rounded-[inherit] px-3 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
@@ -70,7 +91,7 @@ export function SidebarMeetingCard({
             {item.id.startsWith('intro-call') ? '新建会议' : item.title}
           </span>
           {isMeetingItem && (
-            <ChevronDown aria-hidden="true" className={`mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200 motion-reduce:transition-none ${isActive ? 'rotate-180' : ''}`} />
+            <ChevronDown aria-hidden="true" className={`mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-300 [transition-timing-function:var(--agb-spring-out)] motion-reduce:transition-none ${isExpanded ? 'rotate-180 text-primary' : ''}`} />
           )}
         </span>
         {matchContext && (
@@ -83,25 +104,25 @@ export function SidebarMeetingCard({
         <div
           id={detailsId}
           className="agb-meeting-card-tools"
-          data-open={isActive}
-          aria-hidden={!isActive}
-          {...(isActive ? {} : { inert: '' as unknown as boolean })}
+          data-open={isExpanded}
+          aria-hidden={!isExpanded}
+          {...(isExpanded ? {} : { inert: '' as unknown as boolean })}
         >
           <div className="min-h-0 overflow-hidden">
             <div className="mx-3 mb-3 flex flex-wrap gap-1.5 border-t border-border/60 pt-2">
               <button
                 type="button"
-                onClick={isActive ? onRename : undefined}
-                disabled={!isActive}
-                tabIndex={isActive ? 0 : -1}
+                onClick={isExpanded ? onRename : undefined}
+                disabled={!isExpanded}
+                tabIndex={isExpanded ? 0 : -1}
                 className="flex min-h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg px-2 text-xs text-muted-foreground hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none"
                 aria-label={`重命名：${item.title}`}
               ><Pencil className="h-3.5 w-3.5 shrink-0" />重命名</button>
               <button
                 type="button"
-                onClick={isActive ? onDelete : undefined}
-                disabled={!isActive}
-                tabIndex={isActive ? 0 : -1}
+                onClick={isExpanded ? onDelete : undefined}
+                disabled={!isExpanded}
+                tabIndex={isExpanded ? 0 : -1}
                 className="flex min-h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg px-2 text-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none"
                 aria-label={`删除会议：${item.title}`}
               ><Trash2 className="h-3.5 w-3.5 shrink-0" />删除</button>

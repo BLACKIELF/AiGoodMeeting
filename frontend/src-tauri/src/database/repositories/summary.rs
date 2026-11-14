@@ -1,10 +1,27 @@
+use super::meeting::MeetingsRepository;
 use crate::database::models::SummaryProcess;
+use crate::summary::plain_text::sanitize_summary_text;
 use chrono::{DateTime, Utc};
 use serde_json::Value;
 use sqlx::SqlitePool;
 use tracing::{error, info as log_info};
 
 pub struct SummaryProcessesRepository;
+
+fn sanitize_stored_summary(raw: &mut Option<String>) {
+    if let Some(value) = raw {
+        if let Ok(mut summary) = serde_json::from_str::<Value>(value) {
+            sanitize_summary_text(&mut summary);
+            *value = summary.to_string();
+        }
+    }
+}
+
+fn sanitize_process(mut process: SummaryProcess) -> SummaryProcess {
+    sanitize_stored_summary(&mut process.result);
+    sanitize_stored_summary(&mut process.result_backup);
+    process
+}
 
 impl SummaryProcessesRepository {
     /// Retrieves the current summary process state for a given meeting ID.
@@ -16,6 +33,7 @@ impl SummaryProcessesRepository {
             .bind(meeting_id)
             .fetch_optional(pool)
             .await
+            .map(|process| process.map(sanitize_process))
     }
 
     pub async fn update_meeting_summary(
@@ -40,7 +58,9 @@ impl SummaryProcessesRepository {
             return Ok(false);
         }
 
-        let result_json = serde_json::to_string(summary);
+        let mut summary = summary.clone();
+        sanitize_summary_text(&mut summary);
+        let result_json = serde_json::to_string(&summary);
         if result_json.is_err() {
             error!("Can't convert the json to string for saving to Database");
             transaction.rollback().await?;
@@ -83,6 +103,7 @@ impl SummaryProcessesRepository {
         .bind(meeting_id)
         .fetch_optional(pool)
         .await
+        .map(|process| process.map(sanitize_process))
     }
 
     pub async fn create_or_reset_process(
@@ -94,17 +115,27 @@ impl SummaryProcessesRepository {
             "Creating or resetting summary process for meeting_id: {}",
             meeting_id
         );
+        let mut transaction = pool.begin_with("BEGIN IMMEDIATE").await?;
+        // Lock before reading so backup sanitation and reset remain one atomic write.
+        let mut previous: Option<String> = sqlx::query_scalar(
+            "SELECT result FROM summary_processes WHERE meeting_id = ?",
+        )
+        .bind(meeting_id)
+        .fetch_optional(&mut *transaction)
+        .await?
+        .flatten();
+        sanitize_stored_summary(&mut previous);
         sqlx::query(
             r#"
             INSERT INTO summary_processes (meeting_id, status, created_at, updated_at, start_time, result, error)
-            VALUES (?, 'PENDING', ?, ?, ?, NULL, NULL)
+            VALUES (?, 'PENDING', ?, ?, ?, ?, NULL)
             ON CONFLICT(meeting_id) DO UPDATE SET
                 status = 'PENDING',
                 updated_at = excluded.updated_at,
                 start_time = excluded.start_time,
-                result_backup = result,
+                result_backup = excluded.result,
                 result_backup_timestamp = excluded.updated_at,
-                result = result,
+                result = excluded.result,
                 error = NULL
             "#
         )
@@ -112,8 +143,10 @@ impl SummaryProcessesRepository {
         .bind(started_at)
         .bind(started_at)
         .bind(started_at)
-        .execute(pool)
+        .bind(previous)
+        .execute(&mut *transaction)
         .await?;
+        transaction.commit().await?;
         log_info!(
             "Backed up existing summary before regeneration for meeting_id: {}",
             meeting_id
@@ -125,14 +158,17 @@ impl SummaryProcessesRepository {
         pool: &SqlitePool,
         meeting_id: &str,
         started_at: DateTime<Utc>,
-        result: Value,
+        mut result: Value,
         chunk_count: i64,
         processing_time: f64,
+        generated_title: Option<(&str, &str)>,
     ) -> Result<bool, sqlx::Error> {
         let now = Utc::now();
+        sanitize_summary_text(&mut result);
         let result_str = serde_json::to_string(&result)
             .map_err(|e| sqlx::Error::Protocol(format!("Failed to serialize result: {}", e)))?;
 
+        let mut transaction = pool.begin().await?;
         let update = sqlx::query(
             r#"
             UPDATE summary_processes
@@ -147,9 +183,20 @@ impl SummaryProcessesRepository {
         .bind(processing_time)
         .bind(meeting_id)
         .bind(started_at)
-        .execute(pool)
+        .execute(&mut *transaction)
         .await?;
-        Ok(update.rows_affected() == 1)
+        if update.rows_affected() != 1 {
+            transaction.rollback().await?;
+            return Ok(false);
+        }
+        if let Some((expected_title, new_title)) = generated_title {
+            MeetingsRepository::update_generated_meeting_name(
+                &mut transaction, meeting_id, expected_title, new_title,
+            )
+            .await?;
+        }
+        transaction.commit().await?;
+        Ok(true)
     }
 
     pub async fn update_process_failed(
@@ -159,6 +206,16 @@ impl SummaryProcessesRepository {
         error: &str,
     ) -> Result<bool, sqlx::Error> {
         let now = Utc::now();
+        let mut transaction = pool.begin_with("BEGIN IMMEDIATE").await?;
+        let mut restored: Option<String> = sqlx::query_scalar(
+            "SELECT COALESCE(result_backup, result) FROM summary_processes WHERE meeting_id = ? AND start_time = ? AND LOWER(status) = 'pending'",
+        )
+        .bind(meeting_id)
+        .bind(started_at)
+        .fetch_optional(&mut *transaction)
+        .await?
+        .flatten();
+        sanitize_stored_summary(&mut restored);
 
         let update = sqlx::query(
             r#"
@@ -168,7 +225,7 @@ impl SummaryProcessesRepository {
                 error = ?,
                 updated_at = ?,
                 end_time = ?,
-                result = COALESCE(result_backup, result),
+                result = ?,
                 result_backup = NULL,
                 result_backup_timestamp = NULL
             WHERE meeting_id = ? AND start_time = ? AND LOWER(status) = 'pending'
@@ -177,10 +234,12 @@ impl SummaryProcessesRepository {
         .bind(error)
         .bind(now)
         .bind(now)
+        .bind(restored)
         .bind(meeting_id)
         .bind(started_at)
-        .execute(pool)
+        .execute(&mut *transaction)
         .await?;
+        transaction.commit().await?;
         Ok(update.rows_affected() == 1)
     }
 
@@ -190,6 +249,16 @@ impl SummaryProcessesRepository {
         started_at: DateTime<Utc>,
     ) -> Result<bool, sqlx::Error> {
         let now = Utc::now();
+        let mut transaction = pool.begin_with("BEGIN IMMEDIATE").await?;
+        let mut restored: Option<String> = sqlx::query_scalar(
+            "SELECT COALESCE(result_backup, result) FROM summary_processes WHERE meeting_id = ? AND start_time = ? AND LOWER(status) = 'pending'",
+        )
+        .bind(meeting_id)
+        .bind(started_at)
+        .fetch_optional(&mut *transaction)
+        .await?
+        .flatten();
+        sanitize_stored_summary(&mut restored);
 
         let update = sqlx::query(
             r#"
@@ -199,7 +268,7 @@ impl SummaryProcessesRepository {
                 updated_at = ?,
                 end_time = ?,
                 error = 'Generation was cancelled by user',
-                result = COALESCE(result_backup, result),
+                result = ?,
                 result_backup = NULL,
                 result_backup_timestamp = NULL
             WHERE meeting_id = ? AND start_time = ? AND LOWER(status) = 'pending'
@@ -207,10 +276,12 @@ impl SummaryProcessesRepository {
         )
         .bind(now)
         .bind(now)
+        .bind(restored)
         .bind(meeting_id)
         .bind(started_at)
-        .execute(pool)
+        .execute(&mut *transaction)
         .await?;
+        transaction.commit().await?;
         Ok(update.rows_affected() == 1)
     }
 }
@@ -233,9 +304,10 @@ mod tests {
                 result_backup TEXT,
                 result_backup_timestamp TEXT,
                 end_time TEXT,
-                chunk_count INTEGER,
-                processing_time REAL,
-                error TEXT
+                chunk_count INTEGER NOT NULL DEFAULT 0,
+                processing_time REAL NOT NULL DEFAULT 0,
+                error TEXT,
+                metadata TEXT
             )",
         )
         .execute(&pool)
@@ -268,6 +340,105 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn summary_repository_sanitizes_reads_and_both_write_paths() {
+        let pool = test_pool().await;
+        sqlx::raw_sql("CREATE TABLE meetings (id TEXT PRIMARY KEY, updated_at TEXT);
+            CREATE TABLE transcript_chunks (meeting_id TEXT);
+            INSERT INTO meetings VALUES ('plain', NULL);
+            INSERT INTO transcript_chunks VALUES ('plain');")
+            .execute(&pool).await.unwrap();
+        let started_at = Utc::now();
+        let dirty = json!({"markdown":"# 纪要\n- **决定**", "english_cache":{"markdown":"## Decision"}});
+        seed_pending(&pool, "plain", started_at, Some(&dirty.to_string()), Some(&dirty.to_string())).await;
+        for process in [
+            SummaryProcessesRepository::get_summary_data(&pool, "plain").await.unwrap().unwrap(),
+            SummaryProcessesRepository::get_summary_data_for_meeting(&pool, "plain").await.unwrap().unwrap(),
+        ] {
+            for raw in [process.result, process.result_backup] {
+                let value: Value = serde_json::from_str(&raw.unwrap()).unwrap();
+                assert_eq!(value["markdown"], "纪要\n决定");
+                assert_eq!(value["english_cache"]["markdown"], "Decision");
+            }
+        }
+        assert!(SummaryProcessesRepository::update_meeting_summary(&pool, "plain", &dirty).await.unwrap());
+        let saved: String = sqlx::query_scalar("SELECT result FROM summary_processes WHERE meeting_id = 'plain'")
+            .fetch_one(&pool).await.unwrap();
+        assert_eq!(serde_json::from_str::<Value>(&saved).unwrap()["markdown"], "纪要\n决定");
+        assert!(SummaryProcessesRepository::update_process_completed(&pool, "plain", started_at, dirty, 1, 1.0, None).await.unwrap());
+        let saved: String = sqlx::query_scalar("SELECT result FROM summary_processes WHERE meeting_id = 'plain'")
+            .fetch_one(&pool).await.unwrap();
+        assert_eq!(serde_json::from_str::<Value>(&saved).unwrap()["markdown"], "纪要\n决定");
+    }
+
+    #[tokio::test]
+    async fn summary_reset_and_terminal_restore_clean_legacy_backups() {
+        let pool = test_pool().await;
+        let dirty = json!({"markdown":"# 旧纪要\n**决定**"}).to_string();
+        let started_at = Utc::now();
+        seed_pending(&pool, "reset", started_at, Some(&dirty), None).await;
+        SummaryProcessesRepository::create_or_reset_process(&pool, "reset", started_at).await.unwrap();
+        let reset: (String, String) = sqlx::query_as("SELECT result, result_backup FROM summary_processes WHERE meeting_id = 'reset'")
+            .fetch_one(&pool).await.unwrap();
+        for raw in [reset.0, reset.1] {
+            assert_eq!(serde_json::from_str::<Value>(&raw).unwrap()["markdown"], "旧纪要\n决定");
+        }
+        for id in ["failed", "cancelled"] {
+            seed_pending(&pool, id, started_at, None, Some(&dirty)).await;
+            let updated = if id == "failed" {
+                SummaryProcessesRepository::update_process_failed(&pool, id, started_at, "failed").await.unwrap()
+            } else {
+                SummaryProcessesRepository::update_process_cancelled(&pool, id, started_at).await.unwrap()
+            };
+            assert!(updated);
+            let raw: String = sqlx::query_scalar("SELECT result FROM summary_processes WHERE meeting_id = ?")
+                .bind(id).fetch_one(&pool).await.unwrap();
+            assert_eq!(serde_json::from_str::<Value>(&raw).unwrap()["markdown"], "旧纪要\n决定");
+        }
+    }
+
+    #[tokio::test]
+    async fn completion_renames_only_the_unchanged_meeting() {
+        let pool = test_pool().await;
+        sqlx::raw_sql(
+            "CREATE TABLE meetings (id TEXT PRIMARY KEY, title TEXT, updated_at TEXT);
+             CREATE TABLE transcript_chunks (meeting_id TEXT, meeting_name TEXT);
+             INSERT INTO meetings VALUES ('fresh', '临时标题', NULL), ('edited', '手动改名', NULL);
+             INSERT INTO transcript_chunks VALUES ('fresh', '临时标题'), ('edited', '手动改名');",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        for (meeting_id, expected_name) in [("fresh", "发布计划"), ("edited", "手动改名")] {
+            let started_at = Utc::now();
+            seed_pending(&pool, meeting_id, started_at, None, None).await;
+            assert!(SummaryProcessesRepository::update_process_completed(
+                &pool,
+                meeting_id,
+                started_at,
+                json!({"markdown": "周五发布。"}),
+                1,
+                1.0,
+                Some(("临时标题", "发布计划")),
+            )
+            .await
+            .unwrap());
+
+            let saved: (String, String, String) = sqlx::query_as(
+                "SELECT title, meeting_name, status FROM meetings
+                 JOIN transcript_chunks ON transcript_chunks.meeting_id = meetings.id
+                 JOIN summary_processes ON summary_processes.meeting_id = meetings.id
+                 WHERE meetings.id = ?",
+            )
+            .bind(meeting_id)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+            assert_eq!(saved, (expected_name.into(), expected_name.into(), "completed".into()));
+        }
+    }
+
+    #[tokio::test]
     async fn terminal_compare_and_set_preserves_first_writer() {
         let pool = test_pool().await;
         let completed_start = Utc::now();
@@ -280,6 +451,7 @@ mod tests {
                 json!({"markdown": "completed"}),
                 1,
                 1.0,
+                None,
             )
             .await
             .unwrap()
@@ -328,6 +500,7 @@ mod tests {
                 json!({"markdown": "completed"}),
                 1,
                 1.0,
+                None,
             )
             .await
             .unwrap()

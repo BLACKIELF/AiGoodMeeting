@@ -95,7 +95,7 @@ describe('shared WorkspaceGlass source adaptation', () => {
     });
   }
 
-  test('real shell/surfaces avoid opaque wrappers, have one material pass, and offer accessibility fallbacks', () => {
+  test('shell and reading surfaces use native glass with solid accessibility fallbacks', () => {
     expect(css).not.toMatch(/\.agb-palette-preview|\.agb-preview-|\.agb-palette-choice/);
     expect(css).toContain(':root .agb-shell::before');
     expect(css).toContain('background-image: var(--agb-workspace-backdrop)');
@@ -103,7 +103,11 @@ describe('shared WorkspaceGlass source adaptation', () => {
     expect(css).toContain(':root .agb-panel > :is(div, section).bg-card');
     expect(css).toContain('-webkit-mask-composite: xor'); expect(css).toContain('mask-composite: exclude');
     expect(css).toContain('@media (prefers-reduced-transparency: reduce), (prefers-contrast: more)');
-    expect(css).toContain('.agb-shell::before { background-image: none; backdrop-filter: none;');
+    const localConfig = JSON.parse(readFileSync(new URL('../../src-tauri/tauri.local.conf.json', import.meta.url), 'utf8'));
+    expect(localConfig.app.windows[0].transparent).toBe(true);
+    expect(localConfig.app.windows[0].windowEffects.effects).toEqual(['hudWindow']);
+    expect(css).toMatch(/\.agb-shell::before\s*\{\s*background: hsl\(var\(--background\)\);/);
+    expect(css).toMatch(/\.agb-reading-pane,\s*:root \.agb-summary-document \.bn-editor\s*\{\s*background-color: hsl\(var\(--card\)\)/);
   });
 
   test('progress artwork uses the one original asset only where active progress fills exist', () => {

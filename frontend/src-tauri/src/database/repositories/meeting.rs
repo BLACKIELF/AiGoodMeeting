@@ -196,37 +196,30 @@ impl MeetingsRepository {
         Ok(true)
     }
 
-    pub async fn update_meeting_name(
-        pool: &SqlitePool,
+    pub(crate) async fn update_generated_meeting_name(
+        connection: &mut SqliteConnection,
         meeting_id: &str,
+        expected_title: &str,
         new_title: &str,
-    ) -> Result<bool, SqlxError> {
-        let mut transaction = pool.begin().await?;
-        let now = Utc::now();
+    ) -> Result<(), SqlxError> {
+        let updated = sqlx::query(
+            "UPDATE meetings SET title = ?, updated_at = ? WHERE id = ? AND title = ?",
+        )
+        .bind(new_title)
+        .bind(Utc::now().naive_utc())
+        .bind(meeting_id)
+        .bind(expected_title)
+        .execute(&mut *connection)
+        .await?;
 
-        // Update meetings table
-        let meeting_update =
-            sqlx::query("UPDATE meetings SET title = ?, updated_at = ? WHERE id = ?")
+        if updated.rows_affected() > 0 {
+            sqlx::query("UPDATE transcript_chunks SET meeting_name = ? WHERE meeting_id = ?")
                 .bind(new_title)
-                .bind(now)
                 .bind(meeting_id)
-                .execute(&mut *transaction)
+                .execute(&mut *connection)
                 .await?;
-
-        if meeting_update.rows_affected() == 0 {
-            transaction.rollback().await?;
-            return Ok(false); // Meeting not found
         }
-
-        // Update transcript_chunks table
-        sqlx::query("UPDATE transcript_chunks SET meeting_name = ? WHERE meeting_id = ?")
-            .bind(new_title)
-            .bind(meeting_id)
-            .execute(&mut *transaction)
-            .await?;
-
-        transaction.commit().await?;
-        Ok(true)
+        Ok(())
     }
 }
 

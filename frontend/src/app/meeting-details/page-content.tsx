@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { MeetingSummary, SummaryProcessResponse } from '@/types';
 import { useSidebar } from '@/components/Sidebar/SidebarProvider';
 import Analytics from '@/lib/analytics';
@@ -58,6 +59,7 @@ export default function PageContent({
   });
 
   // State
+  const router = useRouter();
   const [customPrompt, setCustomPrompt] = useState<string>('');
   const isRecording = false;
   const [activeTab, setActiveTab] = useState<MeetingDetailsTab>('transcript');
@@ -137,6 +139,7 @@ export default function PageContent({
     meetingTitle: meetingData.meetingTitle,
     aiSummary: meetingData.aiSummary,
     blockNoteSummaryRef: meetingData.blockNoteSummaryRef,
+    speakerTranscript: speakers.transcript,
   });
 
   const meetingOperations = useMeetingOperations({
@@ -196,12 +199,12 @@ export default function PageContent({
     <div
       className="agb-page flex h-dvh min-h-0 min-w-0 flex-col bg-background text-foreground"
     >
-      <header className="agb-header flex shrink-0 flex-wrap items-center justify-between gap-3 px-5 py-4 md:px-6">
+      <header className="agb-header flex shrink-0 flex-wrap items-center justify-between gap-3 px-5 py-3.5 md:px-6">
         <div className="min-w-0 flex-1">
-          <h1 className="break-words text-xl font-semibold leading-snug text-foreground md:text-2xl">
+          <h1 className="break-words text-lg font-semibold leading-snug tracking-tight text-foreground md:text-xl">
             {meetingData.meetingTitle}
           </h1>
-          {formattedDate && <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+          {formattedDate && <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
             <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
             <time dateTime={meeting.created_at}>{formattedDate}</time>
           </p>}
@@ -211,19 +214,34 @@ export default function PageContent({
           {totalCount ?? meetingData.transcripts.length} 段转写
         </span>
       </header>
-      <div className="flex min-h-0 flex-1 min-w-0 overflow-hidden px-3 pb-3 md:px-5 md:pb-5">
+      <div className="flex min-h-0 flex-1 min-w-0 overflow-hidden px-3 pb-3 md:px-5 md:pb-4">
         <MeetingDetailsSplitView
           activeTab={activeTab}
           onTabChange={(tab) => {
             manuallySelectedTabMeetingIdsRef.current.add(meeting.id);
             setActiveTab(tab);
           }}
+          transcriptMeta={`${totalCount ?? meetingData.transcripts.length} 段`}
+          summaryMeta={
+            meetingData.isSummaryDirty
+              ? '未保存'
+              : summaryGeneration.summaryStatus === 'processing' || summaryGeneration.summaryStatus === 'summarizing' || summaryGeneration.summaryStatus === 'regenerating'
+                ? '生成中'
+                : meetingData.aiSummary
+                  ? '已就绪'
+                  : undefined
+          }
           transcript={
             <TranscriptPanel
               transcripts={meetingData.transcripts}
               customPrompt={customPrompt}
               onPromptChange={setCustomPrompt}
               onCopyTranscript={copyOperations.handleCopyTranscript}
+              onCopyTranscriptMarkdown={copyOperations.handleCopyTranscriptMarkdown}
+              onExportTranscript={copyOperations.handleExportTranscript}
+              onUploadTranscriptFeishu={copyOperations.handleUploadTranscriptToFeishu}
+              isUploadingTranscriptFeishu={copyOperations.isUploadingTranscriptFeishu}
+              onOpenFeishuSettings={() => router.push('/settings?tab=feishu')}
               onOpenMeetingFolder={meetingOperations.handleOpenMeetingFolder}
               isRecording={isRecording}
               disableAutoScroll={true}
@@ -249,6 +267,10 @@ export default function PageContent({
               isSummaryDirty={meetingData.isSummaryDirty}
               onSaveAll={meetingData.saveAllChanges}
               onCopySummary={copyOperations.handleCopySummary}
+              onCopySummaryMarkdown={copyOperations.handleCopySummaryMarkdown}
+              onExportSummary={copyOperations.handleExportSummary}
+              onUploadSummaryFeishu={copyOperations.handleUploadSummaryToFeishu}
+              isUploadingSummaryFeishu={copyOperations.isUploadingSummaryFeishu}
               aiSummary={meetingData.aiSummary}
               summaryStatus={summaryGeneration.summaryStatus}
               transcripts={meetingData.transcripts}

@@ -6,7 +6,7 @@ import { toUserMessage } from '@/lib/user-message';
  * Provides functionality to detect, preview, and recover meetings from IndexedDB.
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { indexedDBService, MeetingMetadata, StoredTranscript } from '@/services/indexedDBService';
 import { storageService } from '@/services/storageService';
@@ -36,11 +36,17 @@ export function useTranscriptRecovery(): UseTranscriptRecoveryReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [isRecovering, setIsRecovering] = useState(false);
 
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
   /**
    * Check for recoverable meetings in IndexedDB
    */
   const checkForRecoverableTranscripts = useCallback(async () => {
-    setIsLoading(true);
+    if (mountedRef.current) setIsLoading(true);
     try {
       const meetings = await indexedDBService.getAllMeetings();
 
@@ -81,12 +87,12 @@ export function useTranscriptRecovery(): UseTranscriptRecoveryReturn {
       );
 
 
-      setRecoverableMeetings(meetingsWithAudioStatus);
+      if (mountedRef.current) setRecoverableMeetings(meetingsWithAudioStatus);
     } catch (error) {
       console.error('Failed to check for recoverable transcripts:', error);
-      setRecoverableMeetings([]);
+      if (mountedRef.current) setRecoverableMeetings([]);
     } finally {
-      setIsLoading(false);
+      if (mountedRef.current) setIsLoading(false);
     }
   }, []);
 
@@ -109,7 +115,7 @@ export function useTranscriptRecovery(): UseTranscriptRecoveryReturn {
    * Recover a meeting from IndexedDB
    */
   const recoverMeeting = useCallback(async (meetingId: string): Promise<{ success: boolean; audioRecoveryStatus?: AudioRecoveryStatus | null; meetingId?: string }> => {
-    setIsRecovering(true);
+    if (mountedRef.current) setIsRecovering(true);
     try {
       // 1. Load meeting metadata
       const metadata = await indexedDBService.getMeetingMetadata(meetingId);
@@ -209,7 +215,7 @@ export function useTranscriptRecovery(): UseTranscriptRecoveryReturn {
       }
 
       // 9. Remove from recoverable list
-      setRecoverableMeetings(prev => prev.filter(m => m.meetingId !== meetingId));
+      if (mountedRef.current) setRecoverableMeetings(prev => prev.filter(m => m.meetingId !== meetingId));
 
       return {
         success: true,
@@ -220,7 +226,7 @@ export function useTranscriptRecovery(): UseTranscriptRecoveryReturn {
       console.error('Failed to recover meeting:', error);
       throw error;
     } finally {
-      setIsRecovering(false);
+      if (mountedRef.current) setIsRecovering(false);
     }
   }, [loadMeetingTranscripts]);
 
@@ -230,7 +236,7 @@ export function useTranscriptRecovery(): UseTranscriptRecoveryReturn {
   const deleteRecoverableMeeting = useCallback(async (meetingId: string): Promise<void> => {
     try {
       await indexedDBService.deleteMeeting(meetingId);
-      setRecoverableMeetings(prev => prev.filter(m => m.meetingId !== meetingId));
+      if (mountedRef.current) setRecoverableMeetings(prev => prev.filter(m => m.meetingId !== meetingId));
     } catch (error) {
       console.error('Failed to delete meeting:', error);
       throw error;

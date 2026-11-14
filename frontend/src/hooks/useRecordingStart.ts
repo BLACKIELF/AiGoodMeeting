@@ -48,6 +48,12 @@ export function useRecordingStart(
 ): UseRecordingStartReturn {
   const [isAutoStarting, setIsAutoStarting] = useState(false);
 
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
   // Synchronous latch: a rapid double-click re-enters handleRecordingStart
   // before any state update lands, so an async/state guard can't stop it.
   const isStartingRef = useRef(false);
@@ -119,59 +125,55 @@ export function useRecordingStart(
   // Handle manual recording start (from button click)
   const handleRecordingStart = useCallback(async () => {
     if (isStartingRef.current) {
-      console.log('handleRecordingStart ignored - start already in progress');
       return;
     }
     isStartingRef.current = true;
     try {
-      console.log('handleRecordingStart called - checking selected transcription model status');
 
       // Check the selected transcription model before starting.
       const modelReady = await checkModelReady();
+      if (!mountedRef.current) return;
       if (!modelReady) {
         const isDownloading = await checkIfModelDownloading();
+        if (!mountedRef.current) return;
         if (isDownloading) {
           toast.info('模型正在下载', {
             description: '转写模型下载完成后即可录音。',
             duration: 5000,
           });
-          Analytics.trackButtonClick('start_recording_blocked_downloading', 'home_page');
+          void Analytics.trackButtonClick('start_recording_blocked_downloading', 'home_page').catch(error => console.warn('Failed to track recording action:', error));
         } else {
           toast.error('转写模型尚未就绪', {
             description: '请先下载转写模型。',
             duration: 5000,
           });
           showModal?.('modelSelector', '请先配置转写模型');
-          Analytics.trackButtonClick('start_recording_blocked_missing', 'home_page');
+          void Analytics.trackButtonClick('start_recording_blocked_missing', 'home_page').catch(error => console.warn('Failed to track recording action:', error));
         }
-        setStatus(RecordingStatus.IDLE);
+        if (mountedRef.current) setStatus(RecordingStatus.IDLE);
         return;
       }
 
-      console.log('Selected transcription model ready - setting up meeting title and state');
 
       const randomTitle = generateMeetingTitle();
-      setMeetingTitle(randomTitle);
+      if (mountedRef.current) setMeetingTitle(randomTitle);
 
       // Set STARTING status before initiating backend recording
-      setStatus(RecordingStatus.STARTING, '正在准备录音…');
+      if (mountedRef.current) setStatus(RecordingStatus.STARTING, '正在准备录音…');
 
       // Start the actual backend recording
-      console.log('Starting backend recording with meeting:', randomTitle);
       await recordingService.startRecordingWithDevices(
         selectedDevices?.micDevice || null,
         selectedDevices?.systemDevice || null,
         randomTitle
       );
-      console.log('Backend recording started successfully');
 
       // Update state after successful backend start
       // Note: RECORDING status will be set by RecordingStateContext event listener
-      console.log('Setting isRecordingState to true');
-      setIsRecording(true); // This will also update the sidebar via the useEffect
-      clearTranscripts(); // Clear previous transcripts when starting new recording
-      setIsMeetingActive(true);
-      Analytics.trackButtonClick('start_recording', 'home_page');
+      if (mountedRef.current) setIsRecording(true); // This will also update the sidebar via the useEffect
+      if (mountedRef.current) clearTranscripts(); // Clear previous transcripts when starting new recording
+      if (mountedRef.current) setIsMeetingActive(true);
+      void Analytics.trackButtonClick('start_recording', 'home_page').catch(error => console.warn('Failed to track recording action:', error));
 
       // Show recording notification if enabled
       await showRecordingNotification();
@@ -185,8 +187,8 @@ export function useRecordingStart(
       // disabled forever, since it's gated on isStartingRecording.
       if (errorMsg.includes('already in progress')) {
         console.warn('Start rejected because recording is already active - leaving live recording state untouched');
-        setStatus(RecordingStatus.RECORDING);
-        Analytics.trackButtonClick('start_recording_error', 'home_page');
+        if (mountedRef.current) setStatus(RecordingStatus.RECORDING);
+        void Analytics.trackButtonClick('start_recording_error', 'home_page').catch(error => console.warn('Failed to track recording action:', error));
         return;
       }
 
@@ -195,11 +197,11 @@ export function useRecordingStart(
         toast.error('开始录音超时，请重试。');
       }
 
-      setStatus(RecordingStatus.ERROR, isRuntimeError
+      if (mountedRef.current) setStatus(RecordingStatus.ERROR, isRuntimeError
         ? TRANSCRIPTION_RUNTIME_USER_MESSAGE
         : toUserMessage(error, '无法开始录音，请检查设备和权限后重试。'));
-      setIsRecording(false); // Reset state on error
-      Analytics.trackButtonClick('start_recording_error', 'home_page');
+      if (mountedRef.current) setIsRecording(false); // Reset state on error
+      void Analytics.trackButtonClick('start_recording_error', 'home_page').catch(error => console.warn('Failed to track recording action:', error));
       if (isRuntimeError) return;
       // Re-throw so RecordingControls can handle device-specific errors
       throw error;
@@ -214,30 +216,31 @@ export function useRecordingStart(
       if (typeof window !== 'undefined') {
         const shouldAutoStart = sessionStorage.getItem('autoStartRecording');
         if (shouldAutoStart === 'true' && !isRecording && !isAutoStarting) {
-          console.log('Auto-starting recording from navigation...');
-          setIsAutoStarting(true);
+          if (mountedRef.current) setIsAutoStarting(true);
           sessionStorage.removeItem('autoStartRecording'); // Clear the flag
 
           // Check the selected transcription model before starting.
           const modelReady = await checkModelReady();
+      if (!mountedRef.current) return;
           if (!modelReady) {
             const isDownloading = await checkIfModelDownloading();
+        if (!mountedRef.current) return;
             if (isDownloading) {
               toast.info('模型正在下载', {
                 description: '转写模型下载完成后即可录音。',
                 duration: 5000,
               });
-              Analytics.trackButtonClick('start_recording_blocked_downloading', 'sidebar_auto');
+              void Analytics.trackButtonClick('start_recording_blocked_downloading', 'sidebar_auto').catch(error => console.warn('Failed to track recording action:', error));
             } else {
               toast.error('转写模型尚未就绪', {
                 description: '请先下载转写模型。',
                 duration: 5000,
               });
               showModal?.('modelSelector', '请先配置转写模型');
-              Analytics.trackButtonClick('start_recording_blocked_missing', 'sidebar_auto');
+              void Analytics.trackButtonClick('start_recording_blocked_missing', 'sidebar_auto').catch(error => console.warn('Failed to track recording action:', error));
             }
-            setStatus(RecordingStatus.IDLE);
-            setIsAutoStarting(false);
+            if (mountedRef.current) setStatus(RecordingStatus.IDLE);
+            if (mountedRef.current) setIsAutoStarting(false);
             return;
           }
 
@@ -247,23 +250,21 @@ export function useRecordingStart(
             const generatedMeetingTitle = generateMeetingTitle();
 
             // Set STARTING status before initiating backend recording
-            setStatus(RecordingStatus.STARTING, '正在准备录音…');
+            if (mountedRef.current) setStatus(RecordingStatus.STARTING, '正在准备录音…');
 
-            console.log('Auto-starting backend recording with meeting:', generatedMeetingTitle);
-            const result = await recordingService.startRecordingWithDevices(
+            await recordingService.startRecordingWithDevices(
               selectedDevices?.micDevice || null,
               selectedDevices?.systemDevice || null,
               generatedMeetingTitle
             );
-            console.log('Auto-start backend recording result:', result);
 
             // Update UI state after successful backend start
             // Note: RECORDING status will be set by RecordingStateContext event listener
-            setMeetingTitle(generatedMeetingTitle);
-            setIsRecording(true);
-            clearTranscripts();
-            setIsMeetingActive(true);
-            Analytics.trackButtonClick('start_recording', 'sidebar_auto');
+            if (mountedRef.current) setMeetingTitle(generatedMeetingTitle);
+            if (mountedRef.current) setIsRecording(true);
+            if (mountedRef.current) clearTranscripts();
+            if (mountedRef.current) setIsMeetingActive(true);
+            void Analytics.trackButtonClick('start_recording', 'sidebar_auto').catch(error => console.warn('Failed to track recording action:', error));
 
             // Show recording notification if enabled
             await showRecordingNotification();
@@ -272,25 +273,25 @@ export function useRecordingStart(
             const errorMsg = error instanceof Error ? error.message : String(error);
             if (errorMsg.includes('already in progress')) {
               // Benign race — another start won and is live; skip ERROR/alert.
-              setStatus(RecordingStatus.RECORDING);
+              if (mountedRef.current) setStatus(RecordingStatus.RECORDING);
             } else {
               const isRuntimeError = isTranscriptionRuntimeStartError(error);
-              setStatus(RecordingStatus.ERROR, isRuntimeError
+              if (mountedRef.current) setStatus(RecordingStatus.ERROR, isRuntimeError
                 ? TRANSCRIPTION_RUNTIME_USER_MESSAGE
                 : toUserMessage(error, '无法开始录音，请检查设备和权限后重试。'));
               if (!isRuntimeError) {
                 alert(toUserMessage(error, '无法开始录音，请检查设备和权限后重试。'));
               }
             }
-            Analytics.trackButtonClick('start_recording_error', 'sidebar_auto');
+            void Analytics.trackButtonClick('start_recording_error', 'sidebar_auto').catch(error => console.warn('Failed to track recording action:', error));
           } finally {
-            setIsAutoStarting(false);
+            if (mountedRef.current) setIsAutoStarting(false);
           }
         }
       }
     };
 
-    checkAutoStartRecording();
+    void checkAutoStartRecording().catch(error => console.error('Auto-start recording check failed:', error));
   }, [
     isRecording,
     isAutoStarting,
@@ -310,33 +311,33 @@ export function useRecordingStart(
   useEffect(() => {
     const handleDirectStart = async () => {
       if (isRecording || isAutoStarting) {
-        console.log('Recording already in progress, ignoring direct start event');
         return;
       }
 
-      console.log('Direct start from sidebar - checking selected transcription model status');
-      setIsAutoStarting(true);
+      if (mountedRef.current) setIsAutoStarting(true);
 
       // Check the selected transcription model before starting.
       const modelReady = await checkModelReady();
+      if (!mountedRef.current) return;
       if (!modelReady) {
         const isDownloading = await checkIfModelDownloading();
+        if (!mountedRef.current) return;
         if (isDownloading) {
           toast.info('模型正在下载', {
             description: '转写模型下载完成后即可录音。',
             duration: 5000,
           });
-          Analytics.trackButtonClick('start_recording_blocked_downloading', 'sidebar_direct');
+          void Analytics.trackButtonClick('start_recording_blocked_downloading', 'sidebar_direct').catch(error => console.warn('Failed to track recording action:', error));
         } else {
           toast.error('转写模型尚未就绪', {
             description: '请先下载转写模型。',
             duration: 5000,
           });
           showModal?.('modelSelector', '请先配置转写模型');
-          Analytics.trackButtonClick('start_recording_blocked_missing', 'sidebar_direct');
+          void Analytics.trackButtonClick('start_recording_blocked_missing', 'sidebar_direct').catch(error => console.warn('Failed to track recording action:', error));
         }
-        setStatus(RecordingStatus.IDLE);
-        setIsAutoStarting(false);
+        if (mountedRef.current) setStatus(RecordingStatus.IDLE);
+        if (mountedRef.current) setIsAutoStarting(false);
         return;
       }
 
@@ -345,23 +346,21 @@ export function useRecordingStart(
         const generatedMeetingTitle = generateMeetingTitle();
 
         // Set STARTING status before initiating backend recording
-        setStatus(RecordingStatus.STARTING, '正在准备录音…');
+        if (mountedRef.current) setStatus(RecordingStatus.STARTING, '正在准备录音…');
 
-        console.log('Starting backend recording with meeting:', generatedMeetingTitle);
-        const result = await recordingService.startRecordingWithDevices(
+        await recordingService.startRecordingWithDevices(
           selectedDevices?.micDevice || null,
           selectedDevices?.systemDevice || null,
           generatedMeetingTitle
         );
-        console.log('Backend recording result:', result);
 
         // Update UI state after successful backend start
         // Note: RECORDING status will be set by RecordingStateContext event listener
-        setMeetingTitle(generatedMeetingTitle);
-        setIsRecording(true);
-        clearTranscripts();
-        setIsMeetingActive(true);
-        Analytics.trackButtonClick('start_recording', 'sidebar_direct');
+        if (mountedRef.current) setMeetingTitle(generatedMeetingTitle);
+        if (mountedRef.current) setIsRecording(true);
+        if (mountedRef.current) clearTranscripts();
+        if (mountedRef.current) setIsMeetingActive(true);
+        void Analytics.trackButtonClick('start_recording', 'sidebar_direct').catch(error => console.warn('Failed to track recording action:', error));
 
         // Show recording notification if enabled
         await showRecordingNotification();
@@ -370,26 +369,29 @@ export function useRecordingStart(
         const errorMsg = error instanceof Error ? error.message : String(error);
         if (errorMsg.includes('already in progress')) {
           // Benign race — another start won and is live; skip ERROR/alert.
-          setStatus(RecordingStatus.RECORDING);
+          if (mountedRef.current) setStatus(RecordingStatus.RECORDING);
         } else {
           const isRuntimeError = isTranscriptionRuntimeStartError(error);
-          setStatus(RecordingStatus.ERROR, isRuntimeError
+          if (mountedRef.current) setStatus(RecordingStatus.ERROR, isRuntimeError
             ? TRANSCRIPTION_RUNTIME_USER_MESSAGE
             : toUserMessage(error, '无法开始录音，请检查设备和权限后重试。'));
           if (!isRuntimeError) {
             alert(toUserMessage(error, '无法开始录音，请检查设备和权限后重试。'));
           }
         }
-        Analytics.trackButtonClick('start_recording_error', 'sidebar_direct');
+        void Analytics.trackButtonClick('start_recording_error', 'sidebar_direct').catch(error => console.warn('Failed to track recording action:', error));
       } finally {
-        setIsAutoStarting(false);
+        if (mountedRef.current) setIsAutoStarting(false);
       }
     };
 
-    window.addEventListener('start-recording-from-sidebar', handleDirectStart);
+    const handleEvent = () => {
+      void handleDirectStart().catch(error => console.error('Direct recording start failed:', error));
+    };
+    window.addEventListener('start-recording-from-sidebar', handleEvent);
 
     return () => {
-      window.removeEventListener('start-recording-from-sidebar', handleDirectStart);
+      window.removeEventListener('start-recording-from-sidebar', handleEvent);
     };
   }, [
     isRecording,

@@ -10,6 +10,7 @@ import { speakerLabel, speakerTranscriptText } from '@/lib/speaker-transcript';
 import { SpeakerTranscriptControls } from './SpeakerTranscriptControls';
 import { SpeakerIdentity } from './SpeakerIdentity';
 import { MessageSquareText } from 'lucide-react';
+import type { ExportDocumentFormat } from '@/lib/document-export';
 
 interface TranscriptPanelProps {
   transcripts: Transcript[];
@@ -34,6 +35,11 @@ interface TranscriptPanelProps {
   meetingFolderPath?: string | null;
   onRefetchTranscripts?: () => Promise<void>;
   speakers?: SpeakerTranscriptController;
+  onCopyTranscriptMarkdown?: () => Promise<void>;
+  onExportTranscript?: (format: ExportDocumentFormat) => Promise<void>;
+  onUploadTranscriptFeishu?: (mode?: string) => Promise<void>;
+  isUploadingTranscriptFeishu?: boolean;
+  onOpenFeishuSettings?: () => void;
 }
 
 export function TranscriptPanel({
@@ -55,6 +61,11 @@ export function TranscriptPanel({
   meetingFolderPath,
   onRefetchTranscripts,
   speakers,
+  onCopyTranscriptMarkdown,
+  onExportTranscript,
+  onUploadTranscriptFeishu,
+  isUploadingTranscriptFeishu = false,
+  onOpenFeishuSettings,
 }: TranscriptPanelProps) {
   const [showSpeakers, setShowSpeakers] = useState(true);
   const [originalTranscriptUpdated, setOriginalTranscriptUpdated] = useState(false);
@@ -101,7 +112,7 @@ export function TranscriptPanel({
   };
 
   return (
-    <div className="flex h-full min-w-0 w-full bg-card text-card-foreground flex-col relative @container">
+    <div className="agb-reading-pane flex h-full min-w-0 w-full bg-card text-card-foreground flex-col relative @container">
       {/* Title area */}
       <div className="max-h-[50%] shrink-0 overflow-y-auto border-b border-border px-4 py-3.5">
         <div className="mb-3 flex items-center justify-between gap-2">
@@ -117,6 +128,11 @@ export function TranscriptPanel({
           meetingId={meetingId}
           meetingFolderPath={meetingFolderPath}
           onRefetchTranscripts={handleRetranscribeComplete}
+          onCopyTranscriptMarkdown={onCopyTranscriptMarkdown}
+          onExportTranscript={onExportTranscript}
+          onUploadTranscriptFeishu={onUploadTranscriptFeishu}
+          isUploadingTranscriptFeishu={isUploadingTranscriptFeishu}
+          onOpenFeishuSettings={onOpenFeishuSettings}
         />
         {speakers && !isRecording && <SpeakerTranscriptControls
           controller={speakers}

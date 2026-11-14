@@ -22,6 +22,15 @@ export function useMeetingData({ meeting, summaryData, onMeetingUpdated }: UseMe
   const [isSaving, setIsSaving] = useState(false);
   const [isSummaryDirty, setIsSummaryDirty] = useState(false);
 
+  const mountedRef = useRef(false);
+  const saveScopeRef = useRef(0);
+  const visibleMeetingRef = useRef(meeting.id);
+  visibleMeetingRef.current = meeting.id;
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
   // Ref for BlockNoteSummaryView
   const blockNoteSummaryRef = useRef<BlockNoteSummaryViewRef>(null);
 
@@ -30,9 +39,16 @@ export function useMeetingData({ meeting, summaryData, onMeetingUpdated }: UseMe
 
   // Sync aiSummary state when summaryData prop changes (fixes display of fetched summaries)
   useEffect(() => {
-    console.log('[useMeetingData] Syncing summary data from prop:', summaryData ? 'present' : 'null');
     setAiSummary(summaryData);
   }, [summaryData]); // Only trigger when parent prop changes, not when aiSummary changes
+
+  useEffect(() => {
+    setIsSaving(false);
+    setIsSummaryDirty(false);
+    return () => { saveScopeRef.current += 1; };
+  }, [meeting.id]);
+
+  useEffect(() => { setMeetingTitle(meeting.title || '未命名会议'); }, [meeting.id, meeting.title]);
 
   const handleSummaryChange = useCallback((newSummary: Summary) => {
     setAiSummary(newSummary);
@@ -55,11 +71,11 @@ export function useMeetingData({ meeting, summaryData, onMeetingUpdated }: UseMe
   }, [meeting.id, meetingTitle]);
 
   const saveAllChanges = useCallback(async () => {
-    setIsSaving(true);
+    const scope = saveScopeRef.current;
+    if (mountedRef.current && visibleMeetingRef.current === meeting.id) setIsSaving(true);
     try {
       // Save BlockNote editor changes if dirty
       if (blockNoteSummaryRef.current?.isDirty) {
-        console.log('💾 Saving BlockNote editor changes...');
         await blockNoteSummaryRef.current.saveSummary();
       } else if (aiSummary) {
         await handleSaveSummary(aiSummary);
@@ -70,13 +86,12 @@ export function useMeetingData({ meeting, summaryData, onMeetingUpdated }: UseMe
       console.error('Failed to save changes:', error);
       toast.error('保存失败，请重试', { description: toUserMessage(error, '纪要暂时无法保存，请重试。') });
     } finally {
-      setIsSaving(false);
+      if (mountedRef.current && visibleMeetingRef.current === meeting.id && scope === saveScopeRef.current) setIsSaving(false);
     }
   }, [aiSummary, handleSaveSummary]);
 
   // Update meeting title from external source (e.g., AI summary)
   const updateMeetingTitle = useCallback((newTitle: string) => {
-    console.log('📝 Updating meeting title to:', newTitle);
     setMeetingTitle(newTitle);
     const updatedMeetings = sidebarMeetings.map((m: CurrentMeeting) =>
       m.id === meeting.id ? { id: m.id, title: newTitle } : m

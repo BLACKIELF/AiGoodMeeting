@@ -6,10 +6,11 @@ import { EmptyStateSummary } from '@/components/EmptyStateSummary';
 import { ModelConfig } from '@/components/ModelSettingsModal';
 import { SummaryGeneratorButtonGroup } from './SummaryGeneratorButtonGroup';
 import { SummaryUpdaterButtonGroup } from './SummaryUpdaterButtonGroup';
+import type { ExportDocumentFormat } from '@/lib/document-export';
 import Analytics from '@/lib/analytics';
 import { useEffect, useRef, useState, RefObject } from 'react';
 import { toast } from 'sonner';
-import { Languages, ChevronDown, Sparkles, Loader2, CircleAlert } from 'lucide-react';
+import { Languages, ChevronDown, Loader2, CircleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { LanguagePickerPopover } from '@/components/LanguagePickerPopover';
@@ -35,6 +36,10 @@ interface SummaryPanelProps {
   isSaving: boolean;
   onSaveAll: () => Promise<void>;
   onCopySummary: () => Promise<void>;
+  onCopySummaryMarkdown?: () => Promise<void>;
+  onExportSummary?: (format: ExportDocumentFormat) => Promise<void>;
+  onUploadSummaryFeishu?: (mode?: string) => Promise<void>;
+  isUploadingSummaryFeishu?: boolean;
   aiSummary: MeetingSummary | null;
   summaryStatus: 'idle' | 'processing' | 'summarizing' | 'regenerating' | 'completed' | 'error';
   transcripts: Transcript[];
@@ -67,6 +72,10 @@ export function SummaryPanel({
   isSaving,
   onSaveAll,
   onCopySummary,
+  onCopySummaryMarkdown,
+  onExportSummary,
+  onUploadSummaryFeishu,
+  isUploadingSummaryFeishu = false,
   aiSummary,
   summaryStatus,
   transcripts,
@@ -247,15 +256,9 @@ export function SummaryPanel({
   );
 
   return (
-    <div className="flex-1 min-w-0 flex flex-col bg-card text-card-foreground overflow-hidden h-full w-full @container">
+    <div className="agb-reading-pane flex-1 min-w-0 flex flex-col bg-card text-card-foreground overflow-hidden h-full w-full @container">
       {/* Top-level actions — always visible, same pattern as TranscriptPanel */}
       <div className="shrink-0 border-b border-border px-4 py-3.5">
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />会议纪要
-          </h2>
-          <span className="text-[11px] text-muted-foreground">{isSummaryDirty ? '有未保存的修改' : hasSummary ? '可直接编辑内容' : '整理重点与待办'}</span>
-        </div>
         <div className="agb-toolbar flex w-full min-w-0 flex-wrap items-center justify-between gap-2">
           <div className="flex-shrink-0 min-w-0">
             <SummaryGeneratorButtonGroup
@@ -284,6 +287,10 @@ export function SummaryPanel({
                 isDirty={isSummaryDirty}
                 onSave={onSaveAll}
                 onCopy={onCopySummary}
+                onCopyMarkdown={onCopySummaryMarkdown}
+                onExport={onExportSummary}
+                onUploadFeishu={onUploadSummaryFeishu}
+                isUploadingFeishu={isUploadingSummaryFeishu}
               />
             </div>
           )}
@@ -337,7 +344,7 @@ export function SummaryPanel({
               }}
             />
           </div>
-          {summaryStatus !== 'idle' && (
+          {summaryStatus !== 'idle' && summaryStatus !== 'completed' && (
             <div className={`mx-4 mb-4 rounded-lg border px-3 py-2 ${summaryStatus === 'error' ? 'border-destructive/20 bg-destructive/10 text-destructive' :
               summaryStatus === 'completed' ? 'border-border bg-muted/40 text-muted-foreground' :
                 'border-primary/20 bg-primary/5 text-foreground'
