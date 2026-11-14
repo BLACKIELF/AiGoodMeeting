@@ -1,5 +1,6 @@
 'use client';
 
+import { version } from '../../package.json';
 import React, { useEffect, ReactNode, useRef, useState, createContext } from 'react';
 import Analytics from '@/lib/analytics';
 import { load } from '@tauri-apps/plugin-store';
@@ -93,7 +94,7 @@ export default function AnalyticsProvider({ children }: AnalyticsProviderProps) 
 
       // Identify user with enhanced properties immediately after init
       await Analytics.identify(userId, {
-        app_version: '0.4.1',
+        app_version: version,
         platform: deviceInfo.platform,
         os_version: deviceInfo.os_version,
         architecture: deviceInfo.architecture,

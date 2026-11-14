@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { getVersion } from '@tauri-apps/api/app';
+import { version } from '../../package.json';
 import Image from 'next/image';
 import { ExternalLink } from 'lucide-react';
 import AnalyticsConsentSwitch from './AnalyticsConsentSwitch';
@@ -8,7 +9,7 @@ import { Button } from './ui/button';
 import { toast } from 'sonner';
 
 export function About() {
-  const [currentVersion, setCurrentVersion] = useState<string>('0.4.1');
+  const [currentVersion, setCurrentVersion] = useState<string>(version);
 
   useEffect(() => {
     getVersion().then(setCurrentVersion).catch(console.error);
@@ -38,7 +39,7 @@ export function About() {
         <div>
           <h1 className="text-xl font-semibold tracking-tight">AiGoodMeeting</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">会议纪要</p>
-          <p className="mt-1 text-xs tabular-nums text-muted-foreground">1113v1 · Meetily {currentVersion}</p>
+          <p className="mt-1 text-xs tabular-nums text-muted-foreground">版本 {currentVersion}</p>
         </div>
       </div>
 

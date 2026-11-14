@@ -1,5 +1,6 @@
 'use client';
 
+import { version } from '../../package.json';
 import React from 'react';
 import { X, Info, Shield } from 'lucide-react';
 
@@ -124,7 +125,7 @@ export default function AnalyticsDataModal({ isOpen, onClose, onConfirmDisable }
             <pre className="mt-3 overflow-x-auto text-xs text-muted-foreground">
               {`{
   "event": "meeting_ended",
-  "app_version": "0.4.1",
+  "app_version": "${version}",
   "transcription_provider": "parakeet",
   "transcription_model": "parakeet-tdt-0.6b-v3-int8",
   "summary_provider": "ollama",

@@ -2,7 +2,7 @@
 
 本地录音、语音转文字、区分说话人、生成中文会议纪要。基于 [Meetily Community v0.4.1](https://github.com/Zackriya-Solutions/meetily) 定制，提供 AiGoodBro 七套皮肤。
 
-当前版本为 **1113v5 · Apple Silicon Mac**。应用、源码与校验文件见 [1113v5 发行版](https://github.com/BLACKIELF/AiGoodMeeting/releases/tag/1113v5)。
+当前版本为 **2.0.0 · Apple Silicon Mac**。应用、源码与校验文件见 [2.0.0 发行版](https://github.com/BLACKIELF/AiGoodMeeting/releases/tag/v2.0.0)。
 
 ## 使用
 
@@ -14,7 +14,7 @@
 
 ## 安装
 
-下载对应发行版中的 `AiGoodMeeting-1113v5-arm64.zip` 、`AiGoodMeeting-source-1113v5.tar.gz` 和 `SHA256SUMS-1113v5.txt`，先比对哈希再解压。应用采用本地签名，**未经 Apple 公证**；按 macOS 正常打开流程处理，不需要关闭系统安全保护。
+下载对应发行版中的 `AiGoodMeeting-2.0.0-arm64.zip` 、`AiGoodMeeting-source-2.0.0.tar.gz` 和 `SHA256SUMS-2.0.0.txt`，先比对哈希再解压。应用采用本地签名，**未经 Apple 公证**；按 macOS 正常打开流程处理，不需要关闭系统安全保护。
 
 应用包不包含模型与分人 Python 环境。第一次安装还需以下本地组件，可复用已有文件：
 
@@ -48,7 +48,7 @@
 
 ## 验证与边界
 
-1113v5 通过 161 项前端测试、TypeScript 类型检查、Apple Silicon 构建和签名校验，已在本机安装启动。真实录音全流程与飞书上传仍待复验。Windows 与 Intel Mac 尚未验证。
+2.0.0 通过 161 项前端测试、TypeScript 类型检查、Apple Silicon 构建和签名校验。真实录音全流程与飞书上传仍待复验。Windows 与 Intel Mac 尚未验证。
 
 “四人”是模型容量，并非所有场景的准确率保证。自然多人会议、远场噪声、多人重叠及多小时会议尚未全面验证。分人结果可人工校对；本地 Qwen3 8B 曾在测试中补出不存在的日期，因此姓名、日期、金额和待办应核对原文。
 

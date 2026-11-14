@@ -1,3 +1,4 @@
+import { version } from '../../package.json';
 import React, { useContext, useState, useEffect } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
@@ -94,7 +95,7 @@ export default function AnalyticsConsentSwitch() {
 
         // Identify user with enhanced properties immediately after init
         await Analytics.identify(userId, {
-          app_version: '0.4.1',
+          app_version: version,
           platform: 'tauri',
           first_seen: new Date().toISOString(),
           os: navigator.platform,
