@@ -260,6 +260,7 @@ function MeetingDetailsContent() {
 
   return <PageContent
     key={meetingId}
+    source={source}
     initialSummary={summaryResponse}
     meeting={meetingDetails}
     summaryData={meetingSummary}

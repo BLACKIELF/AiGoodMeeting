@@ -38,6 +38,7 @@ import { useRouter } from 'next/navigation';
 import { useSidebar } from '../Sidebar/SidebarProvider';
 import { LANGUAGES } from '@/constants/languages';
 import { useTranscriptionModels, ModelOption } from '@/hooks/useTranscriptionModels';
+import { QuickHandoffStrip } from '@/components/QuickHandoffStrip';
 
 
 interface ImportAudioDialogProps {
@@ -454,6 +455,11 @@ export function ImportAudioDialog({
             <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
               <p className="text-sm text-destructive">{toUserMessage(error, '导入未完成，请检查音频文件后重试。')}</p>
             </div>
+          )}
+
+          {/* First-level post-transcription linkage strip — editable before AND during transcription */}
+          {!error && (
+            <QuickHandoffStrip mode="arm" compact />
           )}
         </div>
 

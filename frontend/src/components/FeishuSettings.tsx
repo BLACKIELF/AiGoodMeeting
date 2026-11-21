@@ -6,6 +6,7 @@ import { CheckCircle2, CircleAlert, Loader2, RefreshCw, Save, Send } from 'lucid
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { FeishuBeginnerGuide } from '@/components/BeginnerCliGuide';
 import { toUserMessage } from '@/lib/user-message';
 
 export interface FeishuConfig {
@@ -183,6 +184,16 @@ export function FeishuSettings() {
           </Button>
         </div>
       </div>
+
+      {/* Pure-Beginner 1-Click Install & QR Login Guide when not yet connected */}
+      {loaded && !statusReady && (
+        <FeishuBeginnerGuide
+          installed={Boolean(status?.installed)}
+          authenticated={Boolean(status?.authenticated)}
+          checking={checking}
+          onRecheck={() => checkConnection(config.cliPath, config.profile, false)}
+        />
+      )}
 
       {/* Default Upload Mode */}
       <div className="space-y-2.5">

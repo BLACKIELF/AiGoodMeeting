@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Copy, FileDown, FileText, FolderOpen, Loader2, RefreshCw, Send, Settings2 } from 'lucide-react';
+import { Copy, FileDown, FileText, FolderOpen, Loader2, RefreshCw, Send, Settings2, Sparkles } from 'lucide-react';
 import Analytics from '@/lib/analytics';
 import { RetranscribeDialog } from './RetranscribeDialog';
 import { useConfig } from '@/contexts/ConfigContext';
@@ -20,6 +20,7 @@ interface TranscriptButtonGroupProps {
   onUploadTranscriptFeishu?: (mode?: string) => Promise<void>;
   isUploadingTranscriptFeishu?: boolean;
   onOpenFeishuSettings?: () => void;
+  onSendToAgent?: () => void;
 }
 
 export function TranscriptButtonGroup({
@@ -34,6 +35,7 @@ export function TranscriptButtonGroup({
   onUploadTranscriptFeishu,
   isUploadingTranscriptFeishu = false,
   onOpenFeishuSettings,
+  onSendToAgent,
 }: TranscriptButtonGroupProps) {
   const { betaFeatures } = useConfig();
   const [showRetranscribeDialog, setShowRetranscribeDialog] = useState(false);
@@ -104,6 +106,24 @@ export function TranscriptButtonGroup({
             <span>Word</span>
           </Button>
         </>
+      )}
+
+      {onSendToAgent && (
+        <Button
+          variant="default"
+          size="sm"
+          className="px-2.5 cursor-pointer"
+          disabled={disabled}
+          onClick={() => {
+            Analytics.trackButtonClick('send_transcript_to_agent', 'meeting_details');
+            onSendToAgent();
+          }}
+          title="发送完整转写给本地 Agent，预检并执行后同步飞书"
+          aria-label="交给 Agent 执行"
+        >
+          <Sparkles />
+          <span>交给 Agent</span>
+        </Button>
       )}
 
       {onUploadTranscriptFeishu && (

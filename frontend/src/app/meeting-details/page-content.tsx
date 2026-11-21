@@ -8,7 +8,10 @@ import { invoke } from '@tauri-apps/api/core';
 import { toast } from 'sonner';
 import { TranscriptPanel } from '@/components/MeetingDetails/TranscriptPanel';
 import { SummaryPanel } from '@/components/MeetingDetails/SummaryPanel';
+import { AgentHandoffDrawer } from '@/components/MeetingDetails/AgentHandoffDrawer';
+import { QuickHandoffStrip } from '@/components/QuickHandoffStrip';
 import { MeetingDetailsSplitView, type MeetingDetailsTab } from '@/components/MeetingDetails/MeetingDetailsSplitView';
+import { AutoHandoffPlan, loadAutoHandoffPlan } from '@/types/agent-handoff';
 import { ModelConfig } from '@/components/ModelSettingsModal';
 
 // Custom hooks
@@ -25,6 +28,7 @@ export default function PageContent({
   meeting,
   summaryData,
   initialSummary,
+  source = null,
   shouldAutoGenerate = false,
   onAutoGenerateComplete,
   onMeetingUpdated,
@@ -40,6 +44,7 @@ export default function PageContent({
   meeting: any;
   summaryData: MeetingSummary | null;
   initialSummary: SummaryProcessResponse | null;
+  source?: string | null;
   shouldAutoGenerate?: boolean;
   onAutoGenerateComplete?: () => void;
   onMeetingUpdated?: () => Promise<void>;
@@ -63,6 +68,14 @@ export default function PageContent({
   const [customPrompt, setCustomPrompt] = useState<string>('');
   const isRecording = false;
   const [activeTab, setActiveTab] = useState<MeetingDetailsTab>('transcript');
+  const [agentDrawerOpen, setAgentDrawerOpen] = useState(false);
+  const [autoLaunchPlan, setAutoLaunchPlan] = useState<AutoHandoffPlan | null>(null);
+  const autoHandoffTriggeredRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    setAgentDrawerOpen(false);
+    setAutoLaunchPlan(null);
+  }, [meeting.id]);
 
   // Ref to store the modal open function from SummaryGeneratorButtonGroup
   const openModelSettingsRef = useRef<(() => void) | null>(null);
@@ -190,6 +203,27 @@ export default function PageContent({
     onAutoGenerateComplete,
   ]);
 
+  // Auto-trigger armed post-recording / post-transcription handoff plan when arriving from recording or import
+  useEffect(() => {
+    if (
+      (source !== 'recording' && source !== 'import')
+      || meetingData.transcripts.length === 0
+      || autoHandoffTriggeredRef.current === meeting.id
+    ) {
+      return;
+    }
+    const armed = loadAutoHandoffPlan();
+    if (armed.enabledAgents.length > 0) {
+      autoHandoffTriggeredRef.current = meeting.id;
+      setAutoLaunchPlan(armed);
+      setAgentDrawerOpen(true);
+    } else if (armed.sendToFeishu) {
+      autoHandoffTriggeredRef.current = meeting.id;
+      toast.info('已按录音前勾选，自动上传转写到飞书…');
+      void copyOperations.handleUploadTranscriptToFeishu();
+    }
+  }, [source, meeting.id, meetingData.transcripts.length, copyOperations]);
+
   const meetingDate = new Date(meeting.created_at);
   const formattedDate = Number.isNaN(meetingDate.getTime()) ? null : new Intl.DateTimeFormat('zh-CN', {
     year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
@@ -214,6 +248,16 @@ export default function PageContent({
           {totalCount ?? meetingData.transcripts.length} 段转写
         </span>
       </header>
+      <div className="shrink-0 px-3 pb-2 pt-2 md:px-5">
+        <QuickHandoffStrip
+          mode="action"
+          compact
+          onExecuteNow={(plan) => {
+            setAutoLaunchPlan(plan);
+            setAgentDrawerOpen(true);
+          }}
+        />
+      </div>
       <div className="flex min-h-0 flex-1 min-w-0 overflow-hidden px-3 pb-3 md:px-5 md:pb-4">
         <MeetingDetailsSplitView
           activeTab={activeTab}
@@ -242,6 +286,7 @@ export default function PageContent({
               onUploadTranscriptFeishu={copyOperations.handleUploadTranscriptToFeishu}
               isUploadingTranscriptFeishu={copyOperations.isUploadingTranscriptFeishu}
               onOpenFeishuSettings={() => router.push('/settings?tab=feishu')}
+              onSendToAgent={() => setAgentDrawerOpen(true)}
               onOpenMeetingFolder={meetingOperations.handleOpenMeetingFolder}
               isRecording={isRecording}
               disableAutoScroll={true}
@@ -271,6 +316,7 @@ export default function PageContent({
               onExportSummary={copyOperations.handleExportSummary}
               onUploadSummaryFeishu={copyOperations.handleUploadSummaryToFeishu}
               isUploadingSummaryFeishu={copyOperations.isUploadingSummaryFeishu}
+              onSendToAgent={() => setAgentDrawerOpen(true)}
               aiSummary={meetingData.aiSummary}
               summaryStatus={summaryGeneration.summaryStatus}
               transcripts={meetingData.transcripts}
@@ -298,6 +344,14 @@ export default function PageContent({
           }
         />
       </div>
+      <AgentHandoffDrawer
+        open={agentDrawerOpen}
+        onOpenChange={setAgentDrawerOpen}
+        meetingId={meeting.id}
+        meetingTitle={meetingData.meetingTitle || meeting.title}
+        autoLaunchPlan={autoLaunchPlan}
+        onAutoLaunchConsumed={() => setAutoLaunchPlan(null)}
+      />
     </div>
   );
 }

@@ -10,7 +10,7 @@ import type { ExportDocumentFormat } from '@/lib/document-export';
 import Analytics from '@/lib/analytics';
 import { useEffect, useRef, useState, RefObject } from 'react';
 import { toast } from 'sonner';
-import { Languages, ChevronDown, Loader2, CircleAlert } from 'lucide-react';
+import { Languages, ChevronDown, Loader2, CircleAlert, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { LanguagePickerPopover } from '@/components/LanguagePickerPopover';
@@ -40,6 +40,7 @@ interface SummaryPanelProps {
   onExportSummary?: (format: ExportDocumentFormat) => Promise<void>;
   onUploadSummaryFeishu?: (mode?: string) => Promise<void>;
   isUploadingSummaryFeishu?: boolean;
+  onSendToAgent?: () => void;
   aiSummary: MeetingSummary | null;
   summaryStatus: 'idle' | 'processing' | 'summarizing' | 'regenerating' | 'completed' | 'error';
   transcripts: Transcript[];
@@ -76,6 +77,7 @@ export function SummaryPanel({
   onExportSummary,
   onUploadSummaryFeishu,
   isUploadingSummaryFeishu = false,
+  onSendToAgent,
   aiSummary,
   summaryStatus,
   transcripts,
@@ -280,7 +282,7 @@ export function SummaryPanel({
             />
           </div>
 
-          {hasSummary && !isSummaryLoading && (
+          {hasSummary && !isSummaryLoading ? (
             <div className="flex-shrink-0">
               <SummaryUpdaterButtonGroup
                 isSaving={isSaving}
@@ -291,9 +293,24 @@ export function SummaryPanel({
                 onExport={onExportSummary}
                 onUploadFeishu={onUploadSummaryFeishu}
                 isUploadingFeishu={isUploadingSummaryFeishu}
+                onSendToAgent={onSendToAgent}
               />
             </div>
-          )}
+          ) : onSendToAgent && transcripts.length > 0 && !isSummaryLoading ? (
+            <div className="flex-shrink-0">
+              <Button
+                variant="default"
+                size="sm"
+                title="直接发送完整转写给本地 Agent，预检并执行后同步飞书"
+                aria-label="交给 Agent 执行"
+                onClick={onSendToAgent}
+                className="cursor-pointer"
+              >
+                <Sparkles />
+                <span>交给 Agent</span>
+              </Button>
+            </div>
+          ) : null}
         </div>
       </div>
 

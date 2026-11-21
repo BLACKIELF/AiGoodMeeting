@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from 'react';
 import { AudioLines, ChevronRight, FileText, Mic, NotebookPen, Upload } from 'lucide-react';
 import { CardWorkspace } from '@/components/CardWorkspace';
+import { QuickHandoffStrip } from '@/components/QuickHandoffStrip';
 import { Button } from '@/components/ui/button';
 import { useImportDialog } from '@/contexts/ImportDialogContext';
 import { getAudioFormatsDisplayList } from '@/constants/audioFormats';
@@ -62,6 +63,7 @@ export function WorkbenchCards({
           <h1>工作台</h1>
           {isRecording && <span className="agb-workbench-live">{isPaused ? '已暂停' : '录音中'}</span>}
         </header>
+        <QuickHandoffStrip mode="arm" className="mb-3" />
         <CardWorkspace
           id="workbench"
           layout="overview"

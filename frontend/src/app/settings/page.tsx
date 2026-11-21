@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Settings2, Mic, Database as DatabaseIcon, SparkleIcon, FlaskConical, Palette, Send } from 'lucide-react';
+import { ArrowLeft, Bot, Settings2, Mic, Database as DatabaseIcon, SparkleIcon, FlaskConical, Palette, Send } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { invoke } from '@tauri-apps/api/core';
 import { TranscriptSettings } from '@/components/TranscriptSettings';
@@ -10,8 +10,10 @@ import { PreferenceSettings } from '@/components/PreferenceSettings';
 import { SummaryModelSettings } from '@/components/SummaryModelSettings';
 import { BetaSettings } from '@/components/BetaSettings';
 import { FeishuSettings } from '@/components/FeishuSettings';
+import { AgentSettings } from '@/components/AgentSettings';
 import { useConfig } from '@/contexts/ConfigContext';
 import { CardWorkspace } from '@/components/CardWorkspace';
+import { SurpriseButton } from '@/components/SurpriseButton';
 import AppearanceSettings from '@/components/AppearanceSettings';
 
 export default function SettingsPage() {
@@ -49,6 +51,7 @@ export default function SettingsPage() {
 
   const cards = [
     { id: 'appearance', title: '外观', description: '皮肤、明暗模式与材质', icon: Palette, content: <AppearanceSettings /> },
+    { id: 'agent', title: 'Agent 联动', description: '检测本地 Agent 与一键执行发飞书', icon: Bot, content: <AgentSettings /> },
     { id: 'feishu', title: '飞书同步', description: '配置飞书 CLI 与默认上传目录', icon: Send, content: <FeishuSettings /> },
     { id: 'general', title: '通用', description: '通知、数据位置与使用统计', icon: Settings2, content: <PreferenceSettings /> },
     { id: 'recording', title: '录音', description: '录音保存与音频设备', icon: Mic, content: <RecordingSettings /> },
@@ -75,6 +78,9 @@ export default function SettingsPage() {
           <div>
             <h1 className="text-lg font-semibold tracking-tight">设置</h1>
             <p className="text-xs text-muted-foreground">外观、飞书同步、录音与本地模型</p>
+          </div>
+          <div className="ml-auto shrink-0">
+            <SurpriseButton />
           </div>
         </div>
       </header>

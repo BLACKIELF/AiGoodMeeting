@@ -35,6 +35,7 @@ pub(crate) use perf_trace;
 // Re-export async logging macros for external use (removed due to macro conflicts)
 
 // Declare audio module
+pub mod agent_handoff;
 pub mod analytics;
 #[cfg(target_os = "macos")]
 mod app_menu;
@@ -851,7 +852,20 @@ pub fn run() {
             feishu::feishu_save_config,
             feishu::feishu_check_status,
             feishu::feishu_upload_document,
+            feishu::feishu_list_chats,
             feishu::export_meeting_document,
+            // Agent handoff commands
+            agent_handoff::agent_get_config,
+            agent_handoff::agent_save_config,
+            agent_handoff::agent_detect_installations,
+            agent_handoff::agent_list_runs,
+            agent_handoff::agent_start_preflight,
+            agent_handoff::agent_execute_run,
+            agent_handoff::agent_resend_feishu,
+            agent_handoff::agent_cancel_run,
+            agent_handoff::agent_open_run_folder,
+            agent_handoff::agent_prepare_manual_handoff,
+            agent_handoff::run_command_in_terminal,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

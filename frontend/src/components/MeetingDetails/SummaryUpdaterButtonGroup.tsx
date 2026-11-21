@@ -5,12 +5,14 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
+  Bot,
   Copy,
   Save,
   Loader2,
   FileText,
   FileDown,
   Send,
+  Sparkles,
   MoreHorizontal,
   Settings2,
 } from 'lucide-react';
@@ -26,6 +28,7 @@ interface SummaryUpdaterButtonGroupProps {
   onExport?: (format: ExportDocumentFormat) => Promise<void>;
   onUploadFeishu?: (mode?: string) => Promise<void>;
   isUploadingFeishu?: boolean;
+  onSendToAgent?: () => void;
 }
 
 export function SummaryUpdaterButtonGroup({
@@ -37,6 +40,7 @@ export function SummaryUpdaterButtonGroup({
   onExport,
   onUploadFeishu,
   isUploadingFeishu = false,
+  onSendToAgent,
 }: SummaryUpdaterButtonGroupProps) {
   const router = useRouter();
   const [moreOpen, setMoreOpen] = useState(false);
@@ -119,6 +123,23 @@ export function SummaryUpdaterButtonGroup({
         </>
       )}
 
+      {onSendToAgent && (
+        <Button
+          variant="default"
+          size="sm"
+          title="发送会议转写与纪要给本地 Agent，预检并执行后同步飞书"
+          aria-label="交给 Agent 执行"
+          onClick={() => {
+            Analytics.trackButtonClick('send_to_agent', 'meeting_details');
+            onSendToAgent();
+          }}
+          className="cursor-pointer"
+        >
+          <Sparkles />
+          <span>交给 Agent</span>
+        </Button>
+      )}
+
       {onUploadFeishu && (
         <Button
           variant="outline"
@@ -168,6 +189,18 @@ export function SummaryUpdaterButtonGroup({
                 </Button>
               )}
               <div className="my-1 border-t border-border" />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="justify-start px-2.5 text-xs font-normal text-muted-foreground hover:text-foreground"
+                onClick={() => {
+                  setMoreOpen(false);
+                  router.push('/settings?tab=agent');
+                }}
+              >
+                <Bot className="h-3.5 w-3.5" />
+                <span>配置 Agent 联动…</span>
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"

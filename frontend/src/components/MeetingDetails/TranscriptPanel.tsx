@@ -40,6 +40,7 @@ interface TranscriptPanelProps {
   onUploadTranscriptFeishu?: (mode?: string) => Promise<void>;
   isUploadingTranscriptFeishu?: boolean;
   onOpenFeishuSettings?: () => void;
+  onSendToAgent?: () => void;
 }
 
 export function TranscriptPanel({
@@ -66,6 +67,7 @@ export function TranscriptPanel({
   onUploadTranscriptFeishu,
   isUploadingTranscriptFeishu = false,
   onOpenFeishuSettings,
+  onSendToAgent,
 }: TranscriptPanelProps) {
   const [showSpeakers, setShowSpeakers] = useState(true);
   const [originalTranscriptUpdated, setOriginalTranscriptUpdated] = useState(false);
@@ -133,6 +135,7 @@ export function TranscriptPanel({
           onUploadTranscriptFeishu={onUploadTranscriptFeishu}
           isUploadingTranscriptFeishu={isUploadingTranscriptFeishu}
           onOpenFeishuSettings={onOpenFeishuSettings}
+          onSendToAgent={onSendToAgent}
         />
         {speakers && !isRecording && <SpeakerTranscriptControls
           controller={speakers}

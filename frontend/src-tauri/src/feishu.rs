@@ -79,6 +79,29 @@ pub struct ExportDocumentResponse {
     pub path: Option<String>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct FeishuChatItem {
+    pub chat_id: String,
+    pub name: String,
+    pub chat_mode: String,
+    pub description: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct FeishuDeliveryResult {
+    pub attempted: bool,
+    pub delivery_mode: String,
+    pub doc_ok: bool,
+    pub doc_url: Option<String>,
+    pub doc_token: Option<String>,
+    pub message_ok: bool,
+    pub message_id: Option<String>,
+    pub target_label: Option<String>,
+    pub message: String,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FeishuDestination {
     DriveRoot,
@@ -99,7 +122,7 @@ pub struct UploadCommandPlan {
     pub mode_label: String,
 }
 
-fn expand_home_path(raw: &str) -> PathBuf {
+pub(crate) fn expand_home_path(raw: &str) -> PathBuf {
     let trimmed = raw.trim();
     if let Some(rest) = trimmed.strip_prefix("~/") {
         if let Some(home) = dirs::home_dir() {
@@ -109,10 +132,13 @@ fn expand_home_path(raw: &str) -> PathBuf {
     PathBuf::from(trimmed)
 }
 
-fn build_augmented_path() -> OsString {
+pub(crate) fn build_augmented_path() -> OsString {
     let mut dirs_list: Vec<PathBuf> = Vec::new();
     if let Some(home) = dirs::home_dir() {
         dirs_list.push(home.join(".local/bin"));
+        dirs_list.push(home.join(".hermes/node/bin"));
+        dirs_list.push(home.join(".cargo/bin"));
+        dirs_list.push(home.join(".grok/bin"));
     }
     dirs_list.push(PathBuf::from("/opt/homebrew/bin"));
     dirs_list.push(PathBuf::from("/usr/local/bin"));
@@ -796,6 +822,516 @@ pub async fn feishu_upload_document<R: Runtime>(
     )
 }
 
+pub fn parse_feishu_chat_list(stdout: &str) -> Result<Vec<FeishuChatItem>, String> {
+    let parsed = serde_json::from_str::<serde_json::Value>(stdout.trim())
+        .map_err(|e| format!("解析飞书群列表失败：{}", e))?;
+    if parsed.get("ok").and_then(|v| v.as_bool()) == Some(false) {
+        let err_msg = find_json_string(&parsed, &["message", "msg", "error"])
+            .unwrap_or("飞书接口返回失败");
+        return Err(format!("获取飞书群列表失败：{}", err_msg));
+    }
+
+    let chats_arr = parsed
+        .get("data")
+        .and_then(|d| d.get("chats"))
+        .and_then(|c| c.as_array())
+        .or_else(|| parsed.get("chats").and_then(|c| c.as_array()))
+        .cloned()
+        .unwrap_or_default();
+
+    let mut result: Vec<FeishuChatItem> = chats_arr
+        .into_iter()
+        .filter_map(|item| {
+            let chat_id = item.get("chat_id")?.as_str()?.trim().to_string();
+            if chat_id.is_empty() {
+                return None;
+            }
+            let status = item
+                .get("chat_status")
+                .and_then(|v| v.as_str())
+                .unwrap_or("normal");
+            if status != "normal" && !status.is_empty() {
+                return None;
+            }
+            let name = item
+                .get("name")
+                .and_then(|v| v.as_str())
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .unwrap_or(&chat_id)
+                .to_string();
+            let chat_mode = item
+                .get("chat_mode")
+                .and_then(|v| v.as_str())
+                .unwrap_or("group")
+                .to_string();
+            let description = item
+                .get("description")
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .trim()
+                .to_string();
+            Some(FeishuChatItem {
+                chat_id,
+                name,
+                chat_mode,
+                description,
+            })
+        })
+        .collect();
+
+    result.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    Ok(result)
+}
+
+#[tauri::command]
+pub async fn feishu_list_chats<R: Runtime>(app: AppHandle<R>) -> Result<Vec<FeishuChatItem>, String> {
+    let config = load_feishu_config(&app);
+    let binary = resolve_lark_cli_binary(&config.cli_path)?;
+    let identity = normalized_identity(&config.identity);
+    let profile = config.profile.trim();
+
+    let mut args = vec![
+        "im".to_string(),
+        "+chat-list".to_string(),
+        "--page-all".to_string(),
+        "--format".to_string(),
+        "json".to_string(),
+    ];
+    if identity != "auto" {
+        args.push("--as".to_string());
+        args.push(identity.to_string());
+    }
+    if !profile.is_empty() {
+        args.push("--profile".to_string());
+        args.push(profile.to_string());
+    }
+
+    let output = tokio::time::timeout(
+        Duration::from_secs(20),
+        Command::new(&binary)
+            .args(&args)
+            .env("PATH", build_augmented_path())
+            .output(),
+    )
+    .await
+    .map_err(|_| "获取飞书群列表超时，请检查网络连接后重试。".to_string())?
+    .map_err(|e| format!("调用飞书 CLI 获取群列表失败：{}", e))?;
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    if !output.status.success() {
+        if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(stdout.trim()) {
+            if let Some(msg) = find_json_string(&parsed, &["message", "msg", "error"]) {
+                return Err(format!("获取飞书群列表失败：{}", msg));
+            }
+        }
+        let detail = if !stderr.trim().is_empty() {
+            stderr.trim()
+        } else {
+            stdout.trim()
+        };
+        return Err(format!("获取飞书群列表失败：{}", detail));
+    }
+
+    parse_feishu_chat_list(&stdout)
+}
+
+pub fn compose_agent_feishu_message(
+    title: &str,
+    summary: &str,
+    doc_url: Option<&str>,
+    agent_label: &str,
+) -> String {
+    let mut lines: Vec<String> = Vec::new();
+    lines.push(format!("**{}**", title.trim()));
+    if !agent_label.trim().is_empty() {
+        lines.push(format!("执行 Agent：{}", agent_label.trim()));
+    }
+    let clean_summary = summary.trim();
+    if !clean_summary.is_empty() {
+        lines.push(String::new());
+        lines.push(clean_summary.to_string());
+    }
+    if let Some(url) = doc_url.map(str::trim).filter(|s| !s.is_empty()) {
+        lines.push(String::new());
+        lines.push(format!("📄 完整成果云文档：[点击查看飞书文档]({})", url));
+    }
+    lines.join("\n")
+}
+
+async fn resolve_feishu_self_open_id(
+    binary: &Path,
+    profile: &str,
+) -> Result<String, String> {
+    let mut cmd = Command::new(binary);
+    cmd.arg("auth").arg("status").arg("--json");
+    if !profile.trim().is_empty() {
+        cmd.arg("--profile").arg(profile.trim());
+    }
+    cmd.env("PATH", build_augmented_path());
+
+    let output = tokio::time::timeout(Duration::from_secs(12), cmd.output())
+        .await
+        .map_err(|_| "查询飞书当前账号 open_id 超时".to_string())?
+        .map_err(|e| format!("查询飞书账号失败：{}", e))?;
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let parsed = serde_json::from_str::<serde_json::Value>(stdout.trim())
+        .map_err(|e| format!("解析飞书登录信息失败：{}", e))?;
+    parsed
+        .get("identities")
+        .and_then(|i| i.get("user"))
+        .and_then(|u| u.get("openId"))
+        .and_then(|v| v.as_str())
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(str::to_string)
+        .ok_or_else(|| "未能获取当前飞书个人账号的 openId，请先运行 lark-cli auth login。".to_string())
+}
+
+pub async fn deliver_agent_result_to_feishu<R: Runtime>(
+    app: &AppHandle<R>,
+    delivery_mode: &str,
+    chat_id: Option<&str>,
+    chat_name: Option<&str>,
+    title: &str,
+    markdown_content: &str,
+    message_summary: &str,
+    agent_label: &str,
+    idempotency_key: &str,
+) -> FeishuDeliveryResult {
+    let mode = delivery_mode.trim();
+    if mode.is_empty() || mode == "none" {
+        return FeishuDeliveryResult {
+            attempted: false,
+            delivery_mode: "none".to_string(),
+            doc_ok: false,
+            doc_url: None,
+            doc_token: None,
+            message_ok: false,
+            message_id: None,
+            target_label: None,
+            message: "已设置为仅本地完成，未推送飞书".to_string(),
+        };
+    }
+
+    let config = load_feishu_config(app);
+    let binary = match resolve_lark_cli_binary(&config.cli_path) {
+        Ok(b) => b,
+        Err(err) => {
+            return FeishuDeliveryResult {
+                attempted: true,
+                delivery_mode: mode.to_string(),
+                doc_ok: false,
+                doc_url: None,
+                doc_token: None,
+                message_ok: false,
+                message_id: None,
+                target_label: None,
+                message: err,
+            };
+        }
+    };
+
+    let identity = normalized_identity(&config.identity);
+    let profile = config.profile.trim();
+    let stem = sanitize_relative_stem(title);
+    let destination = match parse_feishu_destination(&config.destination) {
+        Ok(d) => d,
+        Err(_) => FeishuDestination::DriveRoot,
+    };
+
+    // Step 1: Create Feishu online Markdown cloud doc (preserving real Markdown formatting)
+    let mut doc_ok = false;
+    let mut doc_url: Option<String> = None;
+    let mut doc_token: Option<String> = None;
+    let mut doc_err: Option<String> = None;
+
+    if markdown_content.trim().is_empty() {
+        doc_err = Some("缺少可写入飞书云文档的 Markdown 成果内容".to_string());
+    } else if let Ok(temp_dir) = tempfile::tempdir() {
+        let rel_name = format!("{}.md", stem);
+        let target_path = temp_dir.path().join(&rel_name);
+        if let Err(e) = std::fs::write(&target_path, markdown_content.as_bytes()) {
+            doc_err = Some(format!("写入临时飞书文档失败：{}", e));
+        } else {
+            let mut args = vec![
+                "docs".to_string(),
+                "+create".to_string(),
+                "--doc-format".to_string(),
+                "markdown".to_string(),
+                "--title".to_string(),
+                stem.clone(),
+                "--content".to_string(),
+                format!("@{}", rel_name),
+            ];
+            match destination {
+                FeishuDestination::DriveRoot => {}
+                FeishuDestination::DriveFolder(tok) | FeishuDestination::WikiNode(tok) => {
+                    args.push("--parent-token".to_string());
+                    args.push(tok);
+                }
+            }
+            if identity != "auto" {
+                args.push("--as".to_string());
+                args.push(identity.to_string());
+            }
+            if !profile.is_empty() {
+                args.push("--profile".to_string());
+                args.push(profile.to_string());
+            }
+            args.push("--format".to_string());
+            args.push("json".to_string());
+
+            let out_res = tokio::time::timeout(
+                Duration::from_secs(60),
+                Command::new(&binary)
+                    .args(&args)
+                    .current_dir(temp_dir.path())
+                    .env("PATH", build_augmented_path())
+                    .output(),
+            )
+            .await;
+
+            match out_res {
+                Ok(Ok(out)) => {
+                    let stdout = String::from_utf8_lossy(&out.stdout);
+                    let stderr = String::from_utf8_lossy(&out.stderr);
+                    match parse_lark_upload_output(
+                        out.status.code(),
+                        &stdout,
+                        &stderr,
+                        &stem,
+                        "飞书在线云文档",
+                    ) {
+                        Ok(resp) => {
+                            doc_ok = true;
+                            doc_url = resp.url;
+                            doc_token = resp.token;
+                        }
+                        Err(e) => doc_err = Some(e),
+                    }
+                }
+                Ok(Err(e)) => doc_err = Some(format!("调用飞书 CLI 创建文档失败：{}", e)),
+                Err(_) => doc_err = Some("创建飞书云文档超时".to_string()),
+            }
+        }
+    } else {
+        doc_err = Some("创建临时上传目录失败".to_string());
+    }
+
+    if mode == "doc_only" {
+        return FeishuDeliveryResult {
+            attempted: true,
+            delivery_mode: mode.to_string(),
+            doc_ok,
+            doc_url,
+            doc_token,
+            message_ok: false,
+            message_id: None,
+            target_label: Some("飞书云文档".to_string()),
+            message: if doc_ok {
+                "已生成飞书在线云文档".to_string()
+            } else {
+                doc_err.unwrap_or_else(|| "创建飞书云文档失败".to_string())
+            },
+        };
+    }
+
+    // Step 2: Send IM notification to selected group or self DM
+    let mut message_ok = false;
+    let mut message_id: Option<String> = None;
+    let mut message_err: Option<String> = None;
+    let mut target_label: Option<String> = None;
+
+    let msg_markdown = compose_agent_feishu_message(
+        &stem,
+        message_summary,
+        doc_url.as_deref(),
+        agent_label,
+    );
+    let safe_idem: String = idempotency_key
+        .chars()
+        .filter(|c| c.is_ascii_alphanumeric() || *c == '-' || *c == '_')
+        .take(48)
+        .collect();
+
+    let recipient_flag: Result<(String, String, String), String> = if mode == "doc_and_group" {
+        let trimmed_chat = chat_id.map(str::trim).unwrap_or("");
+        if trimmed_chat.is_empty() {
+            Err("未选择目标飞书群，已跳过群消息发送（可在右侧或设置中选择群后点击「重发飞书」）".to_string())
+        } else {
+            let label = chat_name
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .map(|s| format!("飞书群：{}", s))
+                .unwrap_or_else(|| format!("飞书群：{}", trimmed_chat));
+            Ok(("--chat-id".to_string(), trimmed_chat.to_string(), label))
+        }
+    } else {
+        match resolve_feishu_self_open_id(&binary, profile).await {
+            Ok(open_id) => Ok(("--user-id".to_string(), open_id, "飞书私聊（本人）".to_string())),
+            Err(e) => Err(e),
+        }
+    };
+
+    match recipient_flag {
+        Ok((flag, target_id, label)) => {
+            target_label = Some(label);
+            let build_im_args = |im_identity: &str, idem_suffix: &str| -> Vec<String> {
+                let mut args = vec![
+                    "im".to_string(),
+                    "+messages-send".to_string(),
+                    flag.clone(),
+                    target_id.clone(),
+                    "--markdown".to_string(),
+                    msg_markdown.clone(),
+                    "--format".to_string(),
+                    "json".to_string(),
+                ];
+                if !safe_idem.is_empty() {
+                    let key: String = format!("{}{}", safe_idem, idem_suffix)
+                        .chars()
+                        .take(50)
+                        .collect();
+                    args.push("--idempotency-key".to_string());
+                    args.push(key);
+                }
+                if im_identity != "auto" {
+                    args.push("--as".to_string());
+                    args.push(im_identity.to_string());
+                }
+                if !profile.is_empty() {
+                    args.push("--profile".to_string());
+                    args.push(profile.to_string());
+                }
+                args
+            };
+
+            let attempts: Vec<(&str, &str)> = if identity == "user" {
+                vec![("user", ""), ("bot", "-b")]
+            } else {
+                vec![(identity, "")]
+            };
+
+            for (attempt_idx, (im_identity, idem_suffix)) in attempts.iter().enumerate() {
+                let args = build_im_args(im_identity, idem_suffix);
+                let send_res = tokio::time::timeout(
+                    Duration::from_secs(30),
+                    Command::new(&binary)
+                        .args(&args)
+                        .env("PATH", build_augmented_path())
+                        .output(),
+                )
+                .await;
+
+                match send_res {
+                    Ok(Ok(out)) => {
+                        let stdout = String::from_utf8_lossy(&out.stdout);
+                        let stderr = String::from_utf8_lossy(&out.stderr);
+                        let parsed = serde_json::from_str::<serde_json::Value>(stdout.trim())
+                            .or_else(|_| serde_json::from_str::<serde_json::Value>(stderr.trim()))
+                            .ok();
+                        if out.status.success()
+                            && parsed
+                                .as_ref()
+                                .and_then(|v| v.get("ok"))
+                                .and_then(|v| v.as_bool())
+                                != Some(false)
+                        {
+                            message_ok = true;
+                            message_err = None;
+                            message_id = parsed
+                                .as_ref()
+                                .and_then(|v| {
+                                    find_json_string(v, &["message_id", "messageId", "id"])
+                                })
+                                .map(str::to_string);
+                            break;
+                        } else {
+                            let detail = parsed
+                                .as_ref()
+                                .and_then(|v| find_json_string(v, &["message", "msg", "error"]))
+                                .map(str::to_string)
+                                .unwrap_or_else(|| {
+                                    if !stderr.trim().is_empty() {
+                                        stderr.trim().to_string()
+                                    } else {
+                                        stdout.trim().to_string()
+                                    }
+                                });
+                            let can_fallback_bot = attempt_idx == 0
+                                && attempts.len() > 1
+                                && (detail.contains("im:message.send_as_user")
+                                    || detail.contains("missing_scope")
+                                    || stderr.contains("im:message.send_as_user"));
+                            if can_fallback_bot {
+                                warn!("User identity lacks im:message.send_as_user, retrying IM send as bot");
+                                continue;
+                            }
+                            message_err = Some(format!("飞书消息发送失败：{}", detail));
+                            break;
+                        }
+                    }
+                    Ok(Err(e)) => {
+                        message_err = Some(format!("调用飞书消息发送失败：{}", e));
+                        break;
+                    }
+                    Err(_) => {
+                        message_err = Some("发送飞书消息超时".to_string());
+                        break;
+                    }
+                }
+            }
+        }
+        Err(e) => {
+            message_err = Some(e);
+        }
+    }
+
+    let summary_message = match (doc_ok, message_ok) {
+        (true, true) => format!(
+            "已创建飞书云文档并推送至{}",
+            target_label.as_deref().unwrap_or("飞书")
+        ),
+        (true, false) => format!(
+            "飞书云文档已创建；{}",
+            message_err.unwrap_or_else(|| "消息未发送".to_string())
+        ),
+        (false, true) => format!(
+            "消息已发送至{}；但云文档创建失败：{}",
+            target_label.as_deref().unwrap_or("飞书"),
+            doc_err.unwrap_or_else(|| "未知错误".to_string())
+        ),
+        (false, false) => {
+            let mut errs = Vec::new();
+            if let Some(e) = doc_err {
+                errs.push(e);
+            }
+            if let Some(e) = message_err {
+                errs.push(e);
+            }
+            if errs.is_empty() {
+                "飞书交付失败".to_string()
+            } else {
+                errs.join("；")
+            }
+        }
+    };
+
+    FeishuDeliveryResult {
+        attempted: true,
+        delivery_mode: mode.to_string(),
+        doc_ok,
+        doc_url,
+        doc_token,
+        message_ok,
+        message_id,
+        target_label,
+        message: summary_message,
+    }
+}
+
 #[tauri::command]
 pub async fn export_meeting_document<R: Runtime>(
     app: AppHandle<R>,
@@ -1020,5 +1556,33 @@ mod tests {
         let err_json = r#"{"ok":false,"error":{"message":"missing scope drive:drive"}}"#;
         let err = parse_lark_upload_output(Some(0), err_json, "", "测试纪要", "飞书在线云文档").unwrap_err();
         assert!(err.contains("missing scope drive:drive"));
+    }
+
+    #[test]
+    fn parses_feishu_chat_list_and_composes_agent_message() {
+        let json = r#"{
+            "ok": true,
+            "data": {
+                "chats": [
+                    {"chat_id": "oc_2", "name": "产品项目群", "chat_mode": "group", "chat_status": "normal", "description": "项目群"},
+                    {"chat_id": "oc_1", "name": "AiGoodBro", "chat_mode": "group", "chat_status": "normal", "description": ""},
+                    {"chat_id": "oc_disbanded", "name": "已解散", "chat_mode": "group", "chat_status": "disbanded"}
+                ]
+            }
+        }"#;
+        let chats = parse_feishu_chat_list(json).unwrap();
+        assert_eq!(chats.len(), 2);
+        assert_eq!(chats[0].chat_id, "oc_1");
+        assert_eq!(chats[1].name, "产品项目群");
+
+        let msg = compose_agent_feishu_message(
+            "季度产品与业务落地方案",
+            "核心结论：先跑通首批直营标杆。",
+            Some("https://feishu.cn/docx/abc"),
+            "Codex",
+        );
+        assert!(msg.contains("**季度产品与业务落地方案**"));
+        assert!(msg.contains("执行 Agent：Codex"));
+        assert!(msg.contains("https://feishu.cn/docx/abc"));
     }
 }

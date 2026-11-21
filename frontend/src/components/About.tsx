@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { ExternalLink } from 'lucide-react';
 import AnalyticsConsentSwitch from './AnalyticsConsentSwitch';
 import { Button } from './ui/button';
+import { SurpriseButton } from './SurpriseButton';
 import { toast } from 'sonner';
 
 export function About() {
@@ -57,6 +58,8 @@ export function About() {
           <ExternalLink className="h-3.5 w-3.5" />
         </Button>
       </div>
+
+      <SurpriseButton />
 
       <div className="border-t border-border pt-4">
         <AnalyticsConsentSwitch />

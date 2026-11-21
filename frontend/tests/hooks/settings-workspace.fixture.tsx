@@ -13,6 +13,7 @@ const originalPreference = { ...await import('../../src/components/PreferenceSet
 const originalSummary = { ...await import('../../src/components/SummaryModelSettings') };
 const originalBeta = { ...await import('../../src/components/BetaSettings') };
 const originalFeishu = { ...await import('../../src/components/FeishuSettings') };
+const originalAgent = { ...await import('../../src/components/AgentSettings') };
 const originalAppearance = { ...await import('../../src/components/AppearanceSettings') };
 const originalModel = { ...await import('../../src/components/ModelSettingsModal') };
 const originalAbout = { ...await import('../../src/components/About') };
@@ -77,6 +78,7 @@ function installMocks() {
   mock.module('../../src/components/SummaryModelSettings', () => ({ ...originalSummary, SummaryModelSettings: SummaryProbe }));
   mock.module('../../src/components/BetaSettings', () => ({ ...originalBeta, BetaSettings: () => <p>实验功能内容</p> }));
   mock.module('../../src/components/FeishuSettings', () => ({ ...originalFeishu, FeishuSettings: () => <p>飞书同步配置内容</p> }));
+  mock.module('../../src/components/AgentSettings', () => ({ ...originalAgent, AgentSettings: () => <p>Agent 联动配置内容</p> }));
   mock.module('../../src/components/AppearanceSettings', () => ({ ...originalAppearance, default: () => <p>七套皮肤与明暗模式</p> }));
   mock.module('../../src/components/ModelSettingsModal', () => ({ ...originalModel, ModelSettingsModal: ModelProbe }));
   mock.module('../../src/components/About', () => ({ ...originalAbout, About: () => <p>版本与开源许可内容</p> }));
@@ -97,6 +99,7 @@ afterAll(() => {
   mock.module('../../src/components/SummaryModelSettings', () => originalSummary);
   mock.module('../../src/components/BetaSettings', () => originalBeta);
   mock.module('../../src/components/FeishuSettings', () => originalFeishu);
+  mock.module('../../src/components/AgentSettings', () => originalAgent);
   mock.module('../../src/components/AppearanceSettings', () => originalAppearance);
   mock.module('../../src/components/ModelSettingsModal', () => originalModel);
   mock.module('../../src/components/About', () => originalAbout);
@@ -136,7 +139,7 @@ describe('settings card workspace integration', () => {
   test('keeps all six settings, saved model changes, visited drafts and error recovery when switching cards', async () => {
     await act(async () => { renderer = create(<ConfigHarness><SettingsPage /></ConfigHarness>); });
     const workspace = renderer!.root.findByType(CardWorkspace);
-    expect(workspace.props.cards).toHaveLength(7);
+    expect(workspace.props.cards).toHaveLength(8);
     expect(workspace.props.value).toBe('appearance');
     expect(invoke).toHaveBeenCalledWith('api_get_transcript_config');
 
